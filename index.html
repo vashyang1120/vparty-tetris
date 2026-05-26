@@ -280,14 +280,47 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .mp-badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:800;background:rgba(255,133,161,.2);color:var(--pink);letter-spacing:.08em}
 
 /* ── MOBILE CONTROLS ── */
-#mob-ctrl{position:fixed;bottom:0;left:0;right:0;z-index:50;display:none;
-  background:rgba(26,10,46,.92);backdrop-filter:blur(10px);
-  border-top:1px solid rgba(255,255,255,.1);padding:8px 10px 14px;
-  grid-template-columns:repeat(5,1fr);gap:6px}
-.mob-btn{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
-  border-radius:12px;color:#fff;font-size:20px;padding:10px 0;cursor:pointer;
-  text-align:center;font-family:'Fredoka One',cursive;user-select:none;transition:all .12s}
-.mob-btn:active{background:rgba(255,133,161,.4);border-color:var(--pink);transform:scale(.92)}
+#mob-ctrl{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;display:none;
+  background:rgba(26,10,46,.95);backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255,255,255,.1);
+  padding:10px 16px 20px;
+  align-items:center;justify-content:space-between;gap:12px;
+}
+/* D-pad left side */
+.dpad{
+  display:grid;
+  grid-template-columns:repeat(3,44px);
+  grid-template-rows:repeat(3,44px);
+  gap:4px;
+}
+/* Right side action buttons */
+.action-btns{
+  display:flex;flex-direction:column;gap:8px;align-items:center;
+}
+.action-row{display:flex;gap:8px;}
+
+.mob-btn{
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
+  border-radius:12px;color:#fff;font-size:20px;
+  cursor:pointer;text-align:center;
+  font-family:'Fredoka One',cursive;user-select:none;
+  transition:background .1s,transform .1s;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.mob-btn:active{background:rgba(255,133,161,.45);border-color:var(--pink);transform:scale(.9);}
+.dpad .mob-btn{width:44px;height:44px;font-size:18px;}
+.dpad .mob-btn.center{background:transparent;border-color:transparent;pointer-events:none;}
+.action-btn-lg{
+  width:64px;height:64px;font-size:22px;border-radius:50%;
+  background:rgba(255,133,161,.2);border:2px solid rgba(255,133,161,.4);
+}
+.action-btn-lg:active{background:rgba(255,133,161,.6);}
+.action-btn-sm{
+  width:52px;height:52px;font-size:18px;border-radius:14px;
+}
+.action-label{font-size:9px;color:rgba(255,255,255,.4);font-weight:800;margin-top:2px;letter-spacing:.05em;}
 
 /* toast */
 #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);
@@ -297,6 +330,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   border:1px solid rgba(255,133,161,.3)}
 #toast.show{opacity:1}
 .admin-lnk{position:fixed;bottom:4px;right:8px;font-size:9px;color:rgba(255,255,255,.12);cursor:pointer;z-index:100}
+
+/* fullscreen btn */
+#fs-btn{
+  position:fixed;top:10px;right:10px;z-index:100;
+  background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);
+  border-radius:10px;color:#fff;font-size:18px;
+  width:38px;height:38px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;backdrop-filter:blur(6px);
+}
+#fs-btn:hover{background:rgba(255,133,161,.35);border-color:var(--pink);}
+#fs-btn.off{display:none;}
 </style>
 </head>
 <body>
@@ -317,6 +362,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       <button class="btn btn-outline btn-sm" id="btn-change-profile">👤 更改角色</button>
       <button class="btn btn-outline btn-sm" id="btn-music-title">🎵 音樂</button>
       <button class="btn btn-outline btn-sm" id="btn-how">🎹 操作說明</button>
+    </div>
+    <div class="btn-row" style="margin-top:4px">
+      <a class="btn btn-outline btn-sm" href="https://balloonv.com/%e6%b0%a3%e7%90%83%e5%b0%8fv%e9%ad%94%e6%b3%95%e6%b4%be%e5%b0%8d%e9%81%8a%e6%88%b2" style="text-decoration:none">🏠 遊戲選單</a>
     </div>
   </div>
 </div>
@@ -476,14 +524,39 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 
 <!-- MOBILE CONTROLS -->
 <div id="mob-ctrl">
-  <button class="mob-btn" id="mob-rotl">↺</button>
-  <button class="mob-btn" id="mob-left">◀</button>
-  <button class="mob-btn" id="mob-down">▼</button>
-  <button class="mob-btn" id="mob-right">▶</button>
-  <button class="mob-btn" id="mob-drop">⬇</button>
+  <!-- LEFT: D-pad -->
+  <div class="dpad">
+    <!-- row1 -->
+    <div class="mob-btn center"></div>
+    <button class="mob-btn" id="mob-up">▲</button>
+    <div class="mob-btn center"></div>
+    <!-- row2 -->
+    <button class="mob-btn" id="mob-left">◀</button>
+    <div class="mob-btn center"></div>
+    <button class="mob-btn" id="mob-right">▶</button>
+    <!-- row3 -->
+    <div class="mob-btn center"></div>
+    <button class="mob-btn" id="mob-down">▼</button>
+    <div class="mob-btn center"></div>
+  </div>
+
+  <!-- RIGHT: rotate + drop -->
+  <div class="action-btns">
+    <div class="action-row">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+        <button class="mob-btn action-btn-sm" id="mob-rotl">↺</button>
+        <div class="action-label">旋轉</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+        <button class="mob-btn action-btn-lg" id="mob-drop">⬇</button>
+        <div class="action-label">落下</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
+<button id="fs-btn" class="off" title="全螢幕">⛶</button>
 <div class="admin-lnk" id="admin-lnk">⚙</div>
 
 <script type="module">
@@ -564,8 +637,33 @@ function toast(msg, dur=2500){
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.add("off"));
   document.getElementById(id).classList.remove("off");
-  document.getElementById("mob-ctrl").style.display = id==="s-game"?"grid":"none";
+  const isGame = id==="s-game";
+  document.getElementById("mob-ctrl").style.display = isGame?"flex":"none";
+  // Show fullscreen btn only on game screen
+  const fsBtn = document.getElementById("fs-btn");
+  fsBtn.classList.toggle("off", !isGame);
 }
+
+// Fullscreen
+document.getElementById("fs-btn").addEventListener("click",()=>{
+  const el = document.documentElement;
+  if(!document.fullscreenElement){
+    const req = el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
+    if(req) req.call(el);
+    document.getElementById("fs-btn").textContent="✕";
+    document.getElementById("fs-btn").title="退出全螢幕";
+  } else {
+    const exit = document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen;
+    if(exit) exit.call(document);
+    document.getElementById("fs-btn").textContent="⛶";
+    document.getElementById("fs-btn").title="全螢幕";
+  }
+});
+document.addEventListener("fullscreenchange",()=>{
+  if(!document.fullscreenElement){
+    document.getElementById("fs-btn").textContent="⛶";
+  }
+});
 
 // ── PROFILE ──
 function buildAvGrid(){
@@ -1070,6 +1168,7 @@ document.addEventListener("keydown",e=>{
 // mobile
 document.getElementById("mob-left").addEventListener("click",mLeft);
 document.getElementById("mob-right").addEventListener("click",mRight);
+document.getElementById("mob-up").addEventListener("click",()=>{if(running&&!paused)tryRotate();});
 document.getElementById("mob-down").addEventListener("click",()=>{if(running&&!paused){if(!mDown())lock();}});
 document.getElementById("mob-rotl").addEventListener("click",()=>{if(running&&!paused)tryRotate();});
 document.getElementById("mob-drop").addEventListener("click",hardDrop);
