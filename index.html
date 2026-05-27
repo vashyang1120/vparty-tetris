@@ -364,7 +364,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       <button class="btn btn-outline btn-sm" id="btn-how">🎹 操作說明</button>
     </div>
     <div class="btn-row" style="margin-top:4px">
-      <button class="btn btn-outline btn-sm" onclick="history.back()">🏠 遊戲選單</button>
+      <button class="btn btn-outline btn-sm" onclick="location.href='https://balloonv.com/%e6%b0%a3%e7%90%83%e5%b0%8fv%e9%ad%94%e6%b3%95%e6%b4%be%e5%b0%8d%e9%81%8a%e6%88%b2'">🏠 遊戲選單</button>
     </div>
   </div>
 </div>
@@ -1367,7 +1367,7 @@ async function loadLB(){
       row.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av">${av?`<img src="${av.url}" alt="">`:""}</div><div class="lb-info"><div class="lb-name">${e.name}${mine?" ⭐":""}</div><div class="lb-meta">LV${e.level||1} · ${e.lines||0}行 · ${dLabel}</div></div><div class="lb-score">${(e.score||0).toLocaleString()}</div>`;
       $("lb-list").appendChild(row);
     });
-  }catch(err){$("lb-list").innerHTML="<div class=\"lb-msg\">載入失敗 😅</div>";}
+  }catch(err){ console.error("LB Error:", err); $("lb-list").innerHTML="<div class=\"lb-msg\">載入失敗："+( err.message||String(err))+"</div>"; }
 }
 document.querySelectorAll(".lb-tab").forEach(btn=>{
   btn.addEventListener("click",()=>{
