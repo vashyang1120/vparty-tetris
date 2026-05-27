@@ -115,6 +115,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 
 /* board */
 #game-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;position:relative;z-index:10;padding:8px 0}
+@media(max-width:700px){#s-game{padding-bottom:170px}}
 #board-wrap{position:relative;border-radius:16px;overflow:hidden;
   box-shadow:0 0 40px rgba(255,133,161,.3),0 0 80px rgba(199,125,255,.15);
   border:2px solid rgba(255,255,255,.15)}
@@ -278,10 +279,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 /* ── MOBILE CONTROLS ── */
 #mob-ctrl{
   position:fixed;bottom:0;left:0;right:0;z-index:50;display:none;
-  background:rgba(26,10,46,.95);backdrop-filter:blur(10px);
-  border-top:1px solid rgba(255,255,255,.1);
-  padding:10px 16px 20px;
+  background:rgba(26,10,46,.98);backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255,255,255,.15);
+  padding:8px 20px 16px;
   align-items:center;justify-content:space-between;gap:12px;
+  height:170px;
 }
 /* D-pad left side */
 .dpad{
@@ -802,13 +804,13 @@ function initCanvas(){
   nCanvas=$("next-canvas");  nCtx=nCanvas.getContext("2d");
   pCanvas=$("particle-canvas"); pCtx=pCanvas.getContext("2d");
   const isMob = window.innerWidth < 700;
-  const mobH  = isMob ? 72 : 0;
-  // side panels: clamp(88px,13vw,130px) each × 2
+  // Mobile controls height: dpad is about 160px + padding
+  const mobCtrlH = isMob ? 170 : 0;
   const sideW = Math.min(130, Math.max(88, window.innerWidth * 0.13)) * 2;
-  const maxH  = window.innerHeight - mobH - 24;
+  const maxH  = window.innerHeight - mobCtrlH - 16;
   const maxW  = window.innerWidth - sideW - 16;
   CELL = Math.floor(Math.min(maxH / ROWS, maxW / COLS));
-  CELL = Math.max(20, Math.min(CELL, 42));
+  CELL = Math.max(18, Math.min(CELL, 38));
   bCanvas.width  = COLS * CELL;
   bCanvas.height = ROWS * CELL;
   pCanvas.width  = window.innerWidth;
