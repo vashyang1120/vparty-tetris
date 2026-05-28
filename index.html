@@ -1172,6 +1172,7 @@ function showLvFlash(){
 function gameOver(){
   running=false;
   sfx.gameOver();
+  toast("遊戲結束！分數="+score+" 存檔中...", 5000);
   const prev=parseInt(localStorage.getItem("vtetris_best")||"0");
   const isNew=score>prev;
   if(isNew){ localStorage.setItem("vtetris_best",score); updateBestDisp(); }
@@ -1399,10 +1400,15 @@ $("btn-music-title").addEventListener("click",openMusic);
 
 async function saveLB(){
   if(!player.name) return;
+  // Capture values immediately before any async gap
+  const savedScore=score, savedLevel=level, savedLines=lines, savedDiff=diff;
   try{
-    await push(ref(db,"tetris-balloon/leaderboard"),
-      {name:player.name,avKey:player.avKey,score,level,lines,difficulty:diff,ts:Date.now()});
-    console.log("LB saved! score="+score);
+    const entry={name:player.name,avKey:player.avKey,
+      score:savedScore,level:savedLevel,lines:savedLines,
+      difficulty:savedDiff,ts:Date.now()};
+    console.log("Saving to LB:", JSON.stringify(entry));
+    await push(ref(db,"tetris-balloon/leaderboard"), entry);
+    console.log("LB saved! score="+savedScore);
   }catch(e){
     console.error("LB save failed:",e);
     toast("儲存排行榜失敗："+e.message);
