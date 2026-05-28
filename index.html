@@ -622,7 +622,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div class="admin-lnk" id="admin-lnk">⚙</div>
 
 <script>
-// Firebase compat SDK (same as rhythm game)
+// Firebase compat SDK - lazy init (same pattern as rhythm game)
 const FB_CFG = {
   apiKey:"AIzaSyAZ8WTuAHOslZSa4eqqX3dHR771mkaSNd8",
   authDomain:"vparty-rhythm-game.firebaseapp.com",
@@ -632,8 +632,35 @@ const FB_CFG = {
   messagingSenderId:"1043884247859",
   appId:"1:1043884247859:web:24b1c030d159d1e9374c46"
 };
-if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
-const db = firebase.database();
+var db = null;
+
+function initFirebase(){
+  if(typeof firebase==="undefined"){
+    var attempts=0;
+    var retry=setInterval(function(){
+      attempts++;
+      if(typeof firebase!=="undefined"){
+        clearInterval(retry);
+        _doInit();
+      } else if(attempts>=20){
+        clearInterval(retry);
+        console.warn("Firebase SDK never loaded");
+      }
+    },250);
+    return;
+  }
+  _doInit();
+}
+function _doInit(){
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+    db=firebase.database();
+    console.log("Firebase connected");
+  }catch(e){
+    console.warn("Firebase init failed:",e.message);
+    db=null;
+  }
+}
 
 // ── IMAGE DATA ──
 const IMG = {
@@ -1408,14 +1435,17 @@ $("btn-music-title").addEventListener("click",openMusic);
 
 async function saveLB(){
   if(!player.name) return;
+  if(!db) _doInit();
+  if(!db){ console.warn("db not ready"); return; }
   const savedScore=score, savedLevel=level, savedLines=lines, savedDiff=diff;
   try{
     const entry={name:player.name,avKey:player.avKey,
       score:savedScore,level:savedLevel,lines:savedLines,
       difficulty:savedDiff,ts:Date.now()};
     await db.ref("tetris-balloon/leaderboard").push(entry);
+    console.log("Saved! score="+savedScore);
   }catch(e){
-    console.error("LB save failed:",e);
+    console.error("LB save failed:",e.message);
   }
 }
 async function loadLB(){
@@ -1505,11 +1535,9 @@ let allAdminEntries=[];
 async function loadAdminData(){
   document.getElementById("adm-lb-list").innerHTML="<div style='text-align:center;color:#9b7a8a;padding:16px;'>🎈 載入中...</div>";
   try{
-    // Debug: check db connection
-    if(!db){ document.getElementById("adm-lb-list").innerHTML="<div style='color:red'>db未初始化</div>"; return; }
+    if(!db) _doInit();
+    if(!db){ document.getElementById("adm-lb-list").innerHTML="<div style='color:red;padding:16px'>Firebase未連線，請重新整理</div>"; return; }
     const snap=await db.ref("tetris-balloon/leaderboard").once("value");
-    const total=snap.numChildren();
-    document.getElementById("adm-lb-list").innerHTML="<div style='color:#9b7a8a;font-size:11px;padding:4px'>Firebase讀到"+total+"筆</div>";
     allAdminEntries=[];
     snap.forEach(c=>allAdminEntries.push({fbKey:c.key,...c.val()}));
     allAdminEntries.sort((a,b)=>b.score-a.score);
@@ -1608,6 +1636,7 @@ document.getElementById("btn-adm-pw").addEventListener("click",()=>{
 });
 
 // ── INIT ──
+initFirebase();
 initBalloon();
 $("danger-img").src=IMG.danger;
 loadPlayer();
