@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>氣球小V方塊派對 🎈</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@400;700&display=swap');
 :root{
@@ -618,11 +620,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <button id="fs-btn" class="off" title="全螢幕">⛶</button>
 <div class="admin-lnk" id="admin-lnk">⚙</div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, query, orderByChild, limitToLast, get, set }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+<script>
+// Firebase compat SDK (same as rhythm game)
 const FB_CFG = {
   apiKey:"AIzaSyAZ8WTuAHOslZSa4eqqX3dHR771mkaSNd8",
   authDomain:"vparty-rhythm-game.firebaseapp.com",
@@ -632,8 +631,8 @@ const FB_CFG = {
   messagingSenderId:"1043884247859",
   appId:"1:1043884247859:web:24b1c030d159d1e9374c46"
 };
-const fbApp = initializeApp(FB_CFG);
-const db = getDatabase(fbApp);
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const db = firebase.database();
 
 // ── IMAGE DATA ──
 const IMG = {
@@ -1413,7 +1412,7 @@ async function saveLB(){
     const entry={name:player.name,avKey:player.avKey,
       score:savedScore,level:savedLevel,lines:savedLines,
       difficulty:savedDiff,ts:Date.now()};
-    await push(ref(db,"tetris-balloon/leaderboard"), entry);
+    await db.ref("tetris-balloon/leaderboard").push(entry);
   }catch(e){
     console.error("LB save failed:",e);
   }
@@ -1422,7 +1421,7 @@ async function loadLB(){
   $("lb-list").innerHTML="<div class=\"lb-msg\">🎈 載入中...</div>";
   try{
     // 讀取全部資料，在前端自己排序
-    const snap=await get(ref(db,"tetris-balloon/leaderboard"));
+    const snap=await db.ref("tetris-balloon/leaderboard").once("value");
     let all=[];
     snap.forEach(c=>all.push({id:c.key,...c.val()}));
     // 同ID+同頭像只保留最高分
@@ -1464,7 +1463,7 @@ function updateBestDisp(){
 
 // ── ADMIN ──
 const ADMIN_PW_KEY = "vtetris_admin_pw";
-function getAdminPw(){ return localStorage.getItem(ADMIN_PW_KEY)||"balloonv2024"; }
+function getAdminPw(){ return localStorage.getItem(ADMIN_PW_KEY)||"vparty2024"; }
 
 // 標題點5下進後台
 let logoTapCount=0, logoTapTimer=null;
@@ -1505,8 +1504,7 @@ let allAdminEntries=[];
 async function loadAdminData(){
   document.getElementById("adm-lb-list").innerHTML="<div style='text-align:center;color:#9b7a8a;padding:16px;'>🎈 載入中...</div>";
   try{
-    const q=query(ref(db,"tetris-balloon/leaderboard"),orderByChild("score"),limitToLast(500));
-    const snap=await get(q);
+    const snap=await db.ref("tetris-balloon/leaderboard").once("value");
     allAdminEntries=[];
     snap.forEach(c=>allAdminEntries.push({fbKey:c.key,...c.val()}));
     allAdminEntries.sort((a,b)=>b.score-a.score);
@@ -1553,7 +1551,7 @@ function renderAdminList(){
 window.deleteEntry=async function(fbKey){
   if(!confirm("確定刪除這筆紀錄？")) return;
   try{
-    await set(ref(db,"tetris-balloon/leaderboard/"+fbKey),null);
+    await db.ref("tetris-balloon/leaderboard/"+fbKey).remove();
     allAdminEntries=allAdminEntries.filter(e=>e.fbKey!==fbKey);
     // Update stats
     const players=new Set(allAdminEntries.map(e=>e.name+"|"+e.avKey)).size;
@@ -1569,7 +1567,7 @@ window.deleteEntry=async function(fbKey){
 document.getElementById("btn-adm-clear").addEventListener("click",async()=>{
   if(!confirm("確定清空全部排行榜？此操作無法復原！")) return;
   try{
-    await set(ref(db,"tetris-balloon/leaderboard"),null);
+    await db.ref("tetris-balloon/leaderboard").remove();
     allAdminEntries=[];
     document.getElementById("adm-total").textContent="0";
     document.getElementById("adm-players").textContent="0";
