@@ -1456,10 +1456,6 @@ async function loadLB(){
   try{
     if(!db){ _doInit(); await new Promise(r=>setTimeout(r,1000)); }
     // Force fresh read
-    firebase.database().goOffline();
-    await new Promise(r=>setTimeout(r,200));
-    firebase.database().goOnline();
-    await new Promise(r=>setTimeout(r,500));
     // 讀取全部資料，在前端自己排序
     const snap=await db.ref("tetris-balloon/leaderboard").once("value");
     let all=[];
@@ -1546,11 +1542,6 @@ async function loadAdminData(){
   try{
     if(!db) { _doInit(); await new Promise(r=>setTimeout(r,1000)); }
     if(!db){ document.getElementById("adm-lb-list").innerHTML="<div style='color:red;padding:16px'>Firebase未連線，請重新整理</div>"; return; }
-    // Force fresh read by going offline then online
-    firebase.database().goOffline();
-    await new Promise(r=>setTimeout(r,200));
-    firebase.database().goOnline();
-    await new Promise(r=>setTimeout(r,500));
     const snap=await db.ref("tetris-balloon/leaderboard").once("value");
     allAdminEntries=[];
     snap.forEach(c=>allAdminEntries.push({fbKey:c.key,...c.val()}));
