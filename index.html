@@ -339,7 +339,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   transition:all .18s;backdrop-filter:blur(6px);
 }
 #fs-btn:hover{background:rgba(255,133,161,.35);border-color:var(--pink);}
-#fs-btn.off{display:none;}
+#fs-btn.off{display:none !important;}
 </style>
 </head>
 <body>
@@ -694,7 +694,8 @@ function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.add("off"));
   document.getElementById(id).classList.remove("off");
   const isGame = id==="s-game";
-  document.getElementById("mob-ctrl").style.display = isGame?"flex":"none";
+  const isMobile = window.innerWidth < 900;
+  document.getElementById("mob-ctrl").style.display = (isGame && isMobile)?"flex":"none";
   // Show fullscreen btn only on game screen
   const fsBtn = document.getElementById("fs-btn");
   fsBtn.classList.toggle("off", !isGame);
@@ -1397,23 +1398,27 @@ $("btn-music-title").addEventListener("click",openMusic);
 // ── LEADERBOARD ──
 
 async function saveLB(){
-  if(!player.name||score<=0) return;
+  if(!player.name) return;
   try{
     await push(ref(db,"tetris-balloon/leaderboard"),
       {name:player.name,avKey:player.avKey,score,level,lines,difficulty:diff,ts:Date.now()});
-  }catch(e){}
+    console.log("LB saved! score="+score);
+  }catch(e){
+    console.error("LB save failed:",e);
+    toast("儲存排行榜失敗："+e.message);
+  }
 }
 async function loadLB(){
   $("lb-list").innerHTML="<div class=\"lb-msg\">🎈 載入中...</div>";
   try{
-    const q=query(ref(db,"tetris-balloon/leaderboard"),orderByChild("score"),limitToLast(500));
-    const snap=await get(q);
+    // 讀取全部資料，在前端自己排序
+    const snap=await get(ref(db,"tetris-balloon/leaderboard"));
     let all=[];
     snap.forEach(c=>all.push({id:c.key,...c.val()}));
     // 同ID+同頭像只保留最高分
     const best={};
     all.forEach(e=>{
-      const key=e.name+"|"+e.avKey;
+      const key=(e.name||"")+"||"+(e.avKey||"");
       if(!best[key]||e.score>best[key].score) best[key]=e;
     });
     let entries=Object.values(best);
