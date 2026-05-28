@@ -1505,7 +1505,11 @@ let allAdminEntries=[];
 async function loadAdminData(){
   document.getElementById("adm-lb-list").innerHTML="<div style='text-align:center;color:#9b7a8a;padding:16px;'>🎈 載入中...</div>";
   try{
+    // Debug: check db connection
+    if(!db){ document.getElementById("adm-lb-list").innerHTML="<div style='color:red'>db未初始化</div>"; return; }
     const snap=await db.ref("tetris-balloon/leaderboard").once("value");
+    const total=snap.numChildren();
+    document.getElementById("adm-lb-list").innerHTML="<div style='color:#9b7a8a;font-size:11px;padding:4px'>Firebase讀到"+total+"筆</div>";
     allAdminEntries=[];
     snap.forEach(c=>allAdminEntries.push({fbKey:c.key,...c.val()}));
     allAdminEntries.sort((a,b)=>b.score-a.score);
