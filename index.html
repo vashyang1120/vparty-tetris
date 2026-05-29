@@ -1459,7 +1459,7 @@ async function loadLB(){
     // 讀取全部資料，在前端自己排序
     const snap=await db.ref("tetris-balloon/leaderboard").get();
     let all=[];
-    snap.forEach(c=>all.push({id:c.key,...c.val()}));
+    snap.forEach(c=>{ var v=c.val(); all.push({id:c.key,name:v.name,avKey:v.avKey,score:v.score,level:v.level,lines:v.lines,difficulty:v.difficulty,ts:v.ts}); });
     // 同ID+同頭像只保留最高分
     const best={};
     all.forEach(e=>{
@@ -1544,7 +1544,7 @@ async function loadAdminData(){
     if(!db){ document.getElementById("adm-lb-list").innerHTML="<div style='color:red;padding:16px'>Firebase未連線，請重新整理</div>"; return; }
     const snap=await db.ref("tetris-balloon/leaderboard").get();
     allAdminEntries=[];
-    snap.forEach(c=>allAdminEntries.push({fbKey:c.key,...c.val()}));
+    snap.forEach(c=>{ var v=c.val(); allAdminEntries.push({fbKey:c.key,name:v.name,avKey:v.avKey,score:v.score,level:v.level,lines:v.lines,difficulty:v.difficulty,ts:v.ts}); });
     allAdminEntries.sort((a,b)=>b.score-a.score);
 
     // Stats
