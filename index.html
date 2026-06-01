@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.2</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -552,6 +552,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   <!-- 排行榜管理 -->
   <div style="background:#fff;border-radius:24px;box-shadow:0 4px 20px rgba(62,207,142,.12);border:1.5px solid rgba(62,207,142,.2);padding:20px;width:min(520px,94vw);margin-bottom:14px;">
     <div style="font-size:13px;font-weight:800;color:#3ecf8e;margin-bottom:12px;">排行榜管理</div>
+    <!-- 排序按鈕 -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="adm-sort-btns">
+      <button onclick="setAdminSort('time_desc')" id="sort-time_desc" style="padding:5px 10px;border-radius:16px;border:1.5px solid rgba(62,207,142,.4);background:linear-gradient(135deg,#3ecf8e,#2ab377);color:#fff;font-size:11px;cursor:pointer;font-family:'Fredoka One',cursive;">🕐 最新→最舊</button>
+      <button onclick="setAdminSort('time_asc')" id="sort-time_asc" style="padding:5px 10px;border-radius:16px;border:1.5px solid rgba(62,207,142,.4);background:#f0fff8;color:#3ecf8e;font-size:11px;cursor:pointer;font-family:'Fredoka One',cursive;">🕐 最舊→最新</button>
+      <button onclick="setAdminSort('score_desc')" id="sort-score_desc" style="padding:5px 10px;border-radius:16px;border:1.5px solid rgba(62,207,142,.4);background:#f0fff8;color:#3ecf8e;font-size:11px;cursor:pointer;font-family:'Fredoka One',cursive;">🏆 分數高→低</button>
+      <button onclick="setAdminSort('score_asc')" id="sort-score_asc" style="padding:5px 10px;border-radius:16px;border:1.5px solid rgba(62,207,142,.4);background:#f0fff8;color:#3ecf8e;font-size:11px;cursor:pointer;font-family:'Fredoka One',cursive;">🏆 分數低→高</button>
+    </div>
     <div id="adm-count" style="font-size:11px;color:#9b7a8a;margin-bottom:6px;"></div>
     <div id="adm-lb-list" style="display:flex;flex-direction:column;gap:6px;max-height:500px;overflow-y:auto;"></div>
     <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
@@ -1561,6 +1568,7 @@ document.getElementById("btn-admin-refresh").addEventListener("click",()=>loadAd
 
 // Load admin data
 let allAdminEntries=[];
+let adminSortMode='time_desc'; // time_desc, time_asc, score_desc, score_asc
 async function loadAdminData(){
   document.getElementById("adm-lb-list").innerHTML="<div style='text-align:center;color:#9b7a8a;padding:16px;'>🎈 載入中...</div>";
   try{
@@ -1585,12 +1593,35 @@ async function loadAdminData(){
   }
 }
 
+function setAdminSort(mode){
+  adminSortMode = mode;
+  // Update button styles
+  ['time_desc','time_asc','score_desc','score_asc'].forEach(m=>{
+    const btn = document.getElementById('sort-'+m);
+    if(!btn) return;
+    if(m===mode){
+      btn.style.background='linear-gradient(135deg,#3ecf8e,#2ab377)';
+      btn.style.color='#fff';
+    } else {
+      btn.style.background='#f0fff8';
+      btn.style.color='#3ecf8e';
+    }
+  });
+  renderAdminList();
+}
+
 function renderAdminList(){
   const list=document.getElementById("adm-lb-list");
   list.innerHTML="";
   const countEl=document.getElementById("adm-count");
   if(countEl) countEl.textContent="共 "+allAdminEntries.length+" 筆記錄";
-  allAdminEntries.forEach((e,i)=>{
+  // 依照選擇排序
+  const sorted=[...allAdminEntries];
+  if(adminSortMode==='time_desc') sorted.sort((a,b)=>(b.ts||0)-(a.ts||0));
+  else if(adminSortMode==='time_asc') sorted.sort((a,b)=>(a.ts||0)-(b.ts||0));
+  else if(adminSortMode==='score_desc') sorted.sort((a,b)=>b.score-a.score);
+  else if(adminSortMode==='score_asc') sorted.sort((a,b)=>a.score-b.score);
+  sorted.forEach((e,i)=>{
     const av=AVATARS.find(a=>a.key===e.avKey);
     const date=e.ts?new Date(e.ts).toLocaleDateString("zh-TW"):"";
     const dLabel={easy:"輕鬆",normal:"普通",hard:"挑戰"}[e.difficulty]||"";
