@@ -6,6 +6,7 @@
 <title>氣球小V方塊派對 🎈</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@400;700&display=swap');
 :root{
@@ -126,7 +127,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   border:1px solid rgba(255,255,255,.12)}
 
 /* overlays */
-#g-overlay{position:absolute;inset:0;display:flex;flex-direction:column;
+#g-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:14px;
   background:rgba(20,5,40,.82);backdrop-filter:blur(8px);border-radius:14px;z-index:20}
 #g-overlay.off{display:none}
@@ -351,7 +352,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.0.5</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.0.6</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -657,6 +658,9 @@ function _doInit() {
   try {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
+    firebase.auth().signInAnonymously().catch(function(err){
+      console.warn('[Firebase] 匿名登入失敗', err);
+    });
     console.log('[Firebase] Connected ✓');
   } catch(e) {
     console.warn('[Firebase] Init failed:', e.message);
