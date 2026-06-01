@@ -352,7 +352,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.0.9</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.0</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -730,7 +730,7 @@ function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.add("off"));
   document.getElementById(id).classList.remove("off");
   const isGame = id==="s-game";
-  const isMobile = window.innerWidth < 900;
+  const isMobile = window.innerWidth < 900 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   document.getElementById("mob-ctrl").style.display = (isGame && isMobile)?"flex":"none";
   // Show fullscreen btn only on game screen
   const fsBtn = document.getElementById("fs-btn");
@@ -992,6 +992,20 @@ function clearLines(){
   level=Math.floor(lines/DIFF[diff].lperlv)+1;
   if(level!==prevLv){ showLvFlash(); sfx.levelUp(); }
   updateHUD();
+  // 全消判斷：棋盤完全清空
+  const isEmpty = board.every(row=>row.every(c=>c===null));
+  if(isEmpty){
+    const allClearBonus = Math.round(500 * level * DIFF[diff].mult);
+    score += allClearBonus;
+    // 全消特效
+    const cf2=$("cl-flash");
+    cf2.textContent="✨ ALL CLEAR! ✨  +" + allClearBonus;
+    cf2.style.color="#ffd166";
+    cf2.classList.remove("show"); void cf2.offsetWidth; cf2.classList.add("show");
+    showSticker("allclear");
+    sfx.allClear && sfx.allClear();
+    updateHUD();
+  }
   // 連鎖檢查：消完後再檢查有沒有新的滿排（方塊掉落填滿）
   const chainFull=[];
   for(let r=0;r<ROWS;r++) if(board[r].every(c=>c!==null)) chainFull.push(r);
@@ -1191,8 +1205,8 @@ function showSticker(key){
   clearTimeout(stkTmr);
   stkTmr=setTimeout(()=>{
     img.className="pop-out";
-    setTimeout(()=>{img.className="";img.src="";},300);
-  },1400);
+    setTimeout(()=>{img.className="";img.src="";},200);
+  },700);
 }
 
 // danger
@@ -1334,6 +1348,7 @@ const sfx={
   clear5(){ [440,554,659,880,1109].forEach((f,i)=>tone(f,"sawtooth",.1,.2,i*.05)); noise(.2,.06); },
   clear10(){ [523,659,784,1047,1319,1047,784,1319].forEach((f,i)=>tone(f,"square",.12,.35,i*.06)); setTimeout(()=>noise(.5,.12),100); },
   levelUp(){ [523,659,784,1047,1319].forEach((f,i)=>tone(f,"sine",.15,.3,i*.08)); },
+  allClear(){ [523,659,784,1047,1319,1568,2093].forEach((f,i)=>tone(f,"sine",.18,.35,i*.07)); setTimeout(()=>noise(.6,.15),300); },
   gameOver(){ [440,392,349,330,294,262].forEach((f,i)=>tone(f,"sawtooth",.2,.25,i*.12)); noise(.4,.1); },
   danger(){ tone(220,"sawtooth",.15,.2); tone(110,"sawtooth",.15,.15,.1); },
 };
