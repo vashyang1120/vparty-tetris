@@ -92,6 +92,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 /* ── GAME SCREEN ── */
 #s-game{flex-direction:row;padding:0;align-items:stretch;justify-content:center;
   background:linear-gradient(135deg,#1a0a2e,#2d1b4e,#1a0a2e)}
+@media (pointer:coarse){#s-game{padding-bottom:170px}}
 #particle-canvas{position:absolute;inset:0;z-index:5;pointer-events:none}
 
 .side{width:clamp(88px,13vw,130px);flex-shrink:0;display:flex;flex-direction:column;
@@ -352,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.0</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.1</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -846,7 +847,7 @@ function initCanvas(){
   bCanvas=$("board-canvas"); bCtx=bCanvas.getContext("2d");
   nCanvas=$("next-canvas");  nCtx=nCanvas.getContext("2d");
   pCanvas=$("particle-canvas"); pCtx=pCanvas.getContext("2d");
-  const isMob = window.innerWidth < 700;
+  const isMob = window.innerWidth < 900 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   // Mobile controls height: dpad is about 160px + padding
   const mobCtrlH = isMob ? 170 : 0;
   const sideW = Math.min(130, Math.max(88, window.innerWidth * 0.13)) * 2;
