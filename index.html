@@ -352,7 +352,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.0.6</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.0.7</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1643,6 +1643,14 @@ document.getElementById("btn-adm-pw").addEventListener("click",()=>{
 });
 
 // ── INIT ──
+// 通知父頁面調整 iframe 高度
+function notifyParentHeight(){
+  var h = Math.max(document.documentElement.scrollHeight, window.innerHeight, 700);
+  try{ window.parent.postMessage({type:'iframeHeight', height:h}, '*'); }catch(e){}
+}
+window.addEventListener('resize', notifyParentHeight);
+setTimeout(notifyParentHeight, 500);
+
 initFirebase();
 initBalloon();
 $("danger-img").src=IMG.danger;
