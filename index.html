@@ -352,7 +352,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.0.8</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.0.9</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -992,6 +992,12 @@ function clearLines(){
   level=Math.floor(lines/DIFF[diff].lperlv)+1;
   if(level!==prevLv){ showLvFlash(); sfx.levelUp(); }
   updateHUD();
+  // 連鎖檢查：消完後再檢查有沒有新的滿排（方塊掉落填滿）
+  const chainFull=[];
+  for(let r=0;r<ROWS;r++) if(board[r].every(c=>c!==null)) chainFull.push(r);
+  if(chainFull.length>0){
+    setTimeout(()=>clearLines(), 80);
+  }
 }
 
 function getStickerKey(n,combo){
