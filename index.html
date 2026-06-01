@@ -351,6 +351,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.0.5</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -586,34 +587,32 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 
 <!-- MOBILE CONTROLS -->
 <div id="mob-ctrl">
-  <!-- LEFT: D-pad -->
+  <!-- LEFT: 下左右 3鍵 -->
   <div class="dpad">
-    <!-- row1 -->
+    <!-- row1: 空行保持對齊 -->
     <div class="mob-btn center"></div>
-    <button class="mob-btn" id="mob-up">▲</button>
     <div class="mob-btn center"></div>
-    <!-- row2 -->
+    <div class="mob-btn center"></div>
+    <!-- row2: 左右 -->
     <button class="mob-btn" id="mob-left">◀</button>
     <div class="mob-btn center"></div>
     <button class="mob-btn" id="mob-right">▶</button>
-    <!-- row3 -->
+    <!-- row3: 下 -->
     <div class="mob-btn center"></div>
     <button class="mob-btn" id="mob-down">▼</button>
     <div class="mob-btn center"></div>
   </div>
 
-  <!-- RIGHT: rotate + drop -->
-  <div class="action-btns">
-    <div class="action-row">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-        <button class="mob-btn action-btn-sm" id="mob-rotl">↺</button>
-        <div class="action-label">旋轉</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-        <button class="mob-btn action-btn-lg" id="mob-drop">⬇</button>
-        <div class="action-label">落下</div>
-      </div>
-    </div>
+  <!-- MIDDLE: 落下 -->
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+    <button class="mob-btn action-btn-lg" id="mob-drop">⬇</button>
+    <div class="action-label">落下</div>
+  </div>
+
+  <!-- RIGHT: 旋轉 -->
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+    <button class="mob-btn action-btn-sm" id="mob-rotl">↺</button>
+    <div class="action-label">旋轉</div>
   </div>
 </div>
 
@@ -1266,8 +1265,7 @@ document.addEventListener("keydown",e=>{
 // mobile
 document.getElementById("mob-left").addEventListener("click",mLeft);
 document.getElementById("mob-right").addEventListener("click",mRight);
-document.getElementById("mob-up").addEventListener("click",()=>{if(running&&!paused)tryRotate();});
-document.getElementById("mob-down").addEventListener("click",()=>{if(running&&!paused){if(!mDown())lock();}});
+document.getEldocument.getElementById("mob-down").addEventListener("click",()=>{if(running&&!paused){if(!mDown())lock();}});
 document.getElementById("mob-rotl").addEventListener("click",()=>{if(running&&!paused)tryRotate();});
 document.getElementById("mob-drop").addEventListener("click",hardDrop);
 
