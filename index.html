@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.2</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.3-test-2</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -643,37 +643,61 @@ var FIREBASE_CONFIG = {
 };
 var FIREBASE_ENABLED = true;
 var db = null;
+var firebaseAuthReady = false;
+var firebaseInitPromise = null;
+function ensureFirebaseReady() {
+  if (!FIREBASE_ENABLED) return Promise.resolve(false);
+  if (firebaseAuthReady && db) return Promise.resolve(true);
+  if (firebaseInitPromise) return firebaseInitPromise;
+
+  firebaseInitPromise = new Promise(function(resolve) {
+    function start() {
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        firebase.auth().signInAnonymously()
+          .then(function() {
+            db = firebase.database();
+            firebaseAuthReady = true;
+            console.log('[Firebase] Auth + DB ready ✓');
+            resolve(true);
+          })
+          .catch(function(err) {
+            console.warn('[Firebase] 匿名登入失敗', err);
+            db = null;
+            firebaseAuthReady = false;
+            resolve(false);
+          });
+      } catch(e) {
+        console.warn('[Firebase] Init failed:', e.message);
+        db = null;
+        firebaseAuthReady = false;
+        resolve(false);
+      }
+    }
+
+    if (typeof firebase === 'undefined') {
+      var attempts = 0;
+      var retry = setInterval(function() {
+        attempts++;
+        if (typeof firebase !== 'undefined') {
+          clearInterval(retry);
+          start();
+        } else if (attempts >= 20) {
+          clearInterval(retry);
+          console.warn('[Firebase] SDK never loaded');
+          resolve(false);
+        }
+      }, 250);
+    } else {
+      start();
+    }
+  });
+
+  return firebaseInitPromise;
+}
 
 function initFirebase() {
-  if (!FIREBASE_ENABLED) return;
-  if (typeof firebase === 'undefined') {
-    var attempts = 0;
-    var retry = setInterval(function() {
-      attempts++;
-      if (typeof firebase !== 'undefined') {
-        clearInterval(retry);
-        _doInit();
-      } else if (attempts >= 20) {
-        clearInterval(retry);
-        console.warn('[Firebase] SDK never loaded');
-      }
-    }, 250);
-    return;
-  }
-  _doInit();
-}
-function _doInit() {
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase.database();
-    firebase.auth().signInAnonymously().catch(function(err){
-      console.warn('[Firebase] 匿名登入失敗', err);
-    });
-    console.log('[Firebase] Connected ✓');
-  } catch(e) {
-    console.warn('[Firebase] Init failed:', e.message);
-    db = null;
-  }
+  ensureFirebaseReady();
 }
 
 // ── IMAGE DATA ──
@@ -711,18 +735,57 @@ const AVATARS = [
 ];
 
 // ── PLAYER ──
-let player = {name:"", avKey:"boy1", avUrl:""};
+let player = {
+  name: "", id: "", avKey: "boy1", avUrl: "",
+  baseAvatarKey: "boy1", displayAvatarKey: "boy1", playerKey: ""
+};
+
+function normalizePlayerId(id) {
+  return String(id || '').trim().replace(/\s+/g, ' ').slice(0, 16);
+}
+function makePlayerKey(id, baseAvatarKey) {
+  return encodeURIComponent(normalizePlayerId(id)) + '__' + (baseAvatarKey || 'boy1');
+}
+function getAvatarByKey(key) {
+  return AVATARS.find(function(a){ return a.key === key; }) || AVATARS[0];
+}
+
 function loadPlayer(){
-  player.name  = localStorage.getItem("vtetris_name")  || localStorage.getItem("vrhythm_name")  || "";
-  player.avKey = localStorage.getItem("vtetris_avKey") || localStorage.getItem("vrhythm_avKey") || "boy1";
-  const av = AVATARS.find(a=>a.key===player.avKey)||AVATARS[0];
-  player.avUrl = av.url;
+  var id = localStorage.getItem("vtetris_playerId")
+        || localStorage.getItem("vtetris_name")
+        || localStorage.getItem("vrhythm_name")
+        || "";
+  var baseAvatarKey = localStorage.getItem("vtetris_baseAvatarKey")
+                   || localStorage.getItem("vtetris_avKey")
+                   || localStorage.getItem("vrhythm_avKey")
+                   || "boy1";
+  var displayAvatarKey = localStorage.getItem("vtetris_displayAvatarKey") || baseAvatarKey;
+
+  player.id              = normalizePlayerId(id);
+  player.name            = player.id;
+  player.baseAvatarKey   = baseAvatarKey;
+  player.displayAvatarKey = displayAvatarKey;
+  player.avKey           = baseAvatarKey;
+  player.avUrl           = getAvatarUrl(baseAvatarKey);
+  player.playerKey       = makePlayerKey(player.id, baseAvatarKey);
 }
 function savePlayer(){
-  localStorage.setItem("vtetris_name",  player.name);
-  localStorage.setItem("vtetris_avKey", player.avKey);
-  localStorage.setItem("vrhythm_name",  player.name);
-  localStorage.setItem("vrhythm_avKey", player.avKey);
+  var id   = normalizePlayerId(player.id || player.name);
+  var base = player.baseAvatarKey || player.avKey || "boy1";
+  var disp = player.displayAvatarKey || base;
+  var pk   = makePlayerKey(id, base);
+
+  player.id = id; player.name = id;
+  player.baseAvatarKey = base; player.displayAvatarKey = disp;
+  player.avKey = base; player.playerKey = pk;
+  player.avUrl = getAvatarUrl(base);
+
+  localStorage.setItem("vtetris_playerId",          id);
+  localStorage.setItem("vtetris_baseAvatarKey",     base);
+  localStorage.setItem("vtetris_displayAvatarKey",  disp);
+  localStorage.setItem("vtetris_playerKey",         pk);
+  localStorage.setItem("vtetris_name",  id);
+  localStorage.setItem("vtetris_avKey", base);
 }
 
 // ── TOAST ──
@@ -784,8 +847,12 @@ function buildAvGrid(){
     img.addEventListener("click",()=>{
       document.querySelectorAll(".av-item").forEach(i=>i.classList.remove("sel"));
       img.classList.add("sel");
-      player.avKey=av.key; player.avUrl=av.url;
-      document.getElementById("av-preview-img").src=av.url;
+      player.avKey            = av.key;
+      player.baseAvatarKey    = av.key;
+      player.displayAvatarKey = av.key;
+      player.playerKey        = makePlayerKey(player.id || player.name, av.key);
+      player.avUrl            = av.url;
+      document.getElementById("av-preview-img").src = av.url;
     });
     grid.appendChild(img);
   });
@@ -1468,25 +1535,33 @@ $("btn-music-title").addEventListener("click",openMusic);
 // ── LEADERBOARD ──
 
 async function saveLB(){
-  if(!player.name) return;
-  if(!db) { _doInit(); await new Promise(r=>setTimeout(r,500)); }
-  if(!db){ console.warn("[Firebase] db not ready for save"); return; }
+  if(!player.id && !player.name) return;
+  const ok = await ensureFirebaseReady();
+  if(!ok){ console.warn("[Firebase] db not ready for save"); return; }
   const savedScore=score, savedLevel=level, savedLines=lines, savedDiff=diff;
   try{
-    const entry={name:player.name,avKey:player.avKey,
-      score:savedScore,level:savedLevel,lines:savedLines,
-      difficulty:savedDiff,ts:Date.now()};
+    const entry={
+      // 舊欄位（保留相容）
+      name:player.name, avKey:player.avKey,
+      score:savedScore, level:savedLevel, lines:savedLines,
+      difficulty:savedDiff, ts:Date.now(),
+      // 新欄位
+      id:player.id,
+      playerKey:player.playerKey,
+      baseAvatarKey:player.baseAvatarKey,
+      displayAvatarKey:player.displayAvatarKey
+    };
     await db.ref("tetris-balloon/leaderboard").push(entry);
-    console.log("Saved! score="+savedScore);
+    console.log("[saveLB] Saved! score="+savedScore+" playerKey="+player.playerKey);
   }catch(e){
-    console.error("LB save failed:",e.message);
+    console.error("[saveLB] failed:",e.message);
   }
 }
 async function loadLB(){
   $("lb-list").innerHTML="<div class=\"lb-msg\">🎈 載入中...</div>";
   try{
-    if(!db){ _doInit(); await new Promise(r=>setTimeout(r,1000)); }
-    // Force fresh read
+    const ok = await ensureFirebaseReady();
+    if(!ok){ $("lb-list").innerHTML="<div class=\"lb-msg\">Firebase 尚未登入成功，請稍後再試</div>"; return; }
     // 讀取全部資料，在前端自己排序
     const snap=await db.ref("tetris-balloon/leaderboard").get();
     let all=[];
@@ -1494,8 +1569,10 @@ async function loadLB(){
     // 同ID+同頭像只保留最高分
     const best={};
     all.forEach(e=>{
-      const key=(e.name||"")+"||"+(e.avKey||"");
-      if(!best[key]||e.score>best[key].score) best[key]=e;
+      // playerKey 優先，舊資料 fallback name||avKey
+      const key = e.playerKey || ((e.name||"")+"||"+(e.avKey||""));
+      if(!best[key] || e.score>best[key].score ||
+         (e.score===best[key].score && (e.ts||0)>(best[key].ts||0))) best[key]=e;
     });
     let entries=Object.values(best);
     entries.sort((a,b)=>b.score-a.score);
@@ -1572,8 +1649,8 @@ let adminSortMode='time_desc'; // time_desc, time_asc, score_desc, score_asc
 async function loadAdminData(){
   document.getElementById("adm-lb-list").innerHTML="<div style='text-align:center;color:#9b7a8a;padding:16px;'>🎈 載入中...</div>";
   try{
-    if(!db) { _doInit(); await new Promise(r=>setTimeout(r,1000)); }
-    if(!db){ document.getElementById("adm-lb-list").innerHTML="<div style='color:red;padding:16px'>Firebase未連線，請重新整理</div>"; return; }
+    const ok = await ensureFirebaseReady();
+    if(!ok){ document.getElementById("adm-lb-list").innerHTML="<div style='color:red;padding:16px'>Firebase 尚未登入成功，請稍後再試</div>"; return; }
     const snap=await db.ref("tetris-balloon/leaderboard").get();
     allAdminEntries=[];
     snap.forEach(c=>{ var v=c.val(); allAdminEntries.push({fbKey:c.key,name:v.name,avKey:v.avKey,score:v.score,level:v.level,lines:v.lines,difficulty:v.difficulty,ts:v.ts}); });
@@ -1645,6 +1722,8 @@ function renderAdminList(){
 
 window.deleteEntry=async function(fbKey){
   if(!confirm("確定刪除這筆紀錄？")) return;
+  const ok = await ensureFirebaseReady();
+  if(!ok){ toast("Firebase 尚未就緒"); return; }
   try{
     await db.ref("tetris-balloon/leaderboard/"+fbKey).remove();
     allAdminEntries=allAdminEntries.filter(e=>e.fbKey!==fbKey);
