@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-test-5</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-test-6</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -745,6 +745,18 @@ let player = {
   name: "", id: "", avKey: "boy1", avUrl: "",
   baseAvatarKey: "boy1", displayAvatarKey: "boy1", playerKey: ""
 };
+
+function getLeaderboardIdentityKey(e) {
+  var id = normalizePlayerId(e.id || e.name || "");
+  var base = e.baseAvatarKey || e.avKey || "boy1";
+  if (!id && e.playerKey && e.playerKey.indexOf("__") !== -1) {
+    var parts = e.playerKey.split("__");
+    try { id = normalizePlayerId(decodeURIComponent(parts[0] || "")); }
+    catch(err) { id = normalizePlayerId(parts[0] || ""); }
+    base = parts[1] || base;
+  }
+  return id + "||" + base;
+}
 
 function normalizePlayerId(id) {
   return String(id || '').trim().replace(/\s+/g, ' ').slice(0, 16);
@@ -1653,7 +1665,7 @@ async function loadLB(){
     // 去重：playerKey 優先，fallback name||avKey；同 key 保留最高分，相同分數保留較新 ts
     const best={};
     all.forEach(e=>{
-      const key = e.playerKey || ((e.name||"")+"||"+(e.avKey||""));
+      const key = getLeaderboardIdentityKey(e);
       if(!best[key] || e.score>best[key].score ||
          (e.score===best[key].score && (e.ts||0)>(best[key].ts||0))) best[key]=e;
     });
