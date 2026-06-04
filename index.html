@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-test-2</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-test-3</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -881,7 +881,16 @@ document.getElementById("btn-profile-back").addEventListener("click",()=>showScr
 document.getElementById("btn-profile-ok").addEventListener("click",()=>{
   const name=document.getElementById("player-id-input").value.trim();
   if(!name){ toast("請輸入你的名字！"); return; }
-  player.name=name; savePlayer(); showDiffSelect();
+  const base = player.baseAvatarKey || player.avKey || "boy1";
+  // 同步更新所有身份欄位，確保新 ID 完整覆蓋
+  player.id        = normalizePlayerId(name);
+  player.name      = player.id;
+  player.playerKey = makePlayerKey(player.id, base);
+  // 更新 HUD 名稱
+  const gname = document.getElementById("g-name");
+  if(gname) gname.textContent = player.id;
+  savePlayer();
+  showDiffSelect();
 });
 
 // ── DIFFICULTY SELECT ──
@@ -1706,29 +1715,42 @@ async function loadAdminData(){
 
     allAdminEntries = [];
 
-    // 同時讀 gameLogs/tetris 和 tetris-balloon/leaderboard，合併顯示
+    // 同時讀 gameLogs/tetris 和 tetris-balloon/leaderboard
     const [glSnap, legSnap] = await Promise.all([
       db.ref(DB_PATHS.gameLogs).get(),
       db.ref(DB_PATHS.legacyLeaderboard).get()
     ]);
 
-    glSnap.forEach(c=>{ var v=c.val(); if(!v) return; allAdminEntries.push({
-      fbKey:c.key, _source:"gameLogs",
-      name:v.name||"", avKey:v.avKey||"boy1",
-      id:v.id||"", playerKey:v.playerKey||"",
-      score:v.score||0, level:v.level||1, lines:v.lines||0,
-      difficulty:v.difficulty||"normal", ts:v.ts||0
-    }); });
+    // 先加入 gameLogs（新版主資料），同時建立去重 key set
+    const glDedupeKeys = new Set();
+    glSnap.forEach(c=>{ var v=c.val(); if(!v) return;
+      const pk = v.playerKey || ((v.name||"")+"||"+(v.avKey||""));
+      const dk = pk+"|"+(v.score||0)+"|"+(v.level||1)+"|"+(v.lines||0)+"|"+(v.difficulty||"")+"|"+(v.ts||0);
+      glDedupeKeys.add(dk);
+      allAdminEntries.push({
+        fbKey:c.key, _source:"gameLogs",
+        name:v.name||"", avKey:v.avKey||"boy1",
+        id:v.id||"", playerKey:v.playerKey||"",
+        score:v.score||0, level:v.level||1, lines:v.lines||0,
+        difficulty:v.difficulty||"normal", ts:v.ts||0
+      });
+    });
 
-    legSnap.forEach(c=>{ var v=c.val(); if(!v) return; allAdminEntries.push({
-      fbKey:c.key, _source:"legacyLeaderboard",
-      name:v.name||"", avKey:v.avKey||"boy1",
-      id:v.id||"", playerKey:v.playerKey||"",
-      score:v.score||0, level:v.level||1, lines:v.lines||0,
-      difficulty:v.difficulty||"normal", ts:v.ts||0
-    }); });
+    // 加入 legacy，若 gameLogs 已有同一場紀錄則跳過
+    legSnap.forEach(c=>{ var v=c.val(); if(!v) return;
+      const pk = v.playerKey || ((v.name||"")+"||"+(v.avKey||""));
+      const dk = pk+"|"+(v.score||0)+"|"+(v.level||1)+"|"+(v.lines||0)+"|"+(v.difficulty||"")+"|"+(v.ts||0);
+      if(glDedupeKeys.has(dk)) return; // 已在 gameLogs，跳過
+      allAdminEntries.push({
+        fbKey:c.key, _source:"legacyLeaderboard",
+        name:v.name||"", avKey:v.avKey||"boy1",
+        id:v.id||"", playerKey:v.playerKey||"",
+        score:v.score||0, level:v.level||1, lines:v.lines||0,
+        difficulty:v.difficulty||"normal", ts:v.ts||0
+      });
+    });
 
-    // Stats（合併後不去重，直接統計）
+    // Stats
     const players=new Set(allAdminEntries.map(e=>(e.playerKey||e.name+"|"+e.avKey))).size;
     const topScore=allAdminEntries.reduce((m,e)=>Math.max(m,e.score||0),0);
     document.getElementById("adm-total").textContent=allAdminEntries.length;
@@ -1736,7 +1758,7 @@ async function loadAdminData(){
     document.getElementById("adm-topscore").textContent=topScore.toLocaleString();
 
     const countEl=document.getElementById("adm-count");
-    if(countEl) countEl.textContent="共 "+allAdminEntries.length+" 筆（gameLogs + legacy 合併）";
+    if(countEl) countEl.textContent="共 "+allAdminEntries.length+" 筆（gameLogs 優先，legacy 補舊資料）";
 
     renderAdminList();
   }catch(e){
