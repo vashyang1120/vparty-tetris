@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-test-3</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-test-4</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1350,17 +1350,32 @@ function togglePause(){
   paused=!paused;
   $("pause-btn").textContent=paused?"▶ 繼續":"⏸ 暫停";
   if(paused){
+    // 記錄暫停前音樂狀態，並暫停音樂
+    musicWasPlayingBeforePause = mPlaying;
+    if(mPlaying) pauseSong();
+
     $("g-overlay").classList.remove("off");
     $("ov-title").textContent="⏸ 暫停"; $("ov-sub").textContent="遊戲暫停中";
     const row=$("ov-btns"); row.innerHTML="";
     const b1=document.createElement("button"); b1.className="btn btn-p"; b1.textContent="▶ 繼續";
-    b1.addEventListener("click",()=>{paused=false;$("pause-btn").textContent="⏸ 暫停";$("g-overlay").classList.add("off");lastT=performance.now();});
+    b1.addEventListener("click",()=>{
+      paused=false;
+      $("pause-btn").textContent="⏸ 暫停";
+      $("g-overlay").classList.add("off");
+      lastT=performance.now();
+      // 只恢復原本有播放的音樂
+      if(musicWasPlayingBeforePause) playSong();
+      musicWasPlayingBeforePause=false;
+    });
     const b2=document.createElement("button"); b2.className="btn btn-outline"; b2.textContent="🏠 離開";
     b2.addEventListener("click",()=>{running=false;if(raf)cancelAnimationFrame(raf);showScreen("s-title");});
     row.appendChild(b1); row.appendChild(b2);
   } else {
+    // ESC 直接恢復（不經由按鈕）
     $("g-overlay").classList.add("off");
     lastT=performance.now();
+    if(musicWasPlayingBeforePause) playSong();
+    musicWasPlayingBeforePause=false;
   }
 }
 document.getElementById("btn-quit").addEventListener("click",()=>{
@@ -1450,7 +1465,7 @@ const sfx={
 const SONG_BASE="https://vashyang1120.github.io/vparty-rhythm-game/";
 const EMOJIS=["🎈","🎤","✨","💫","🌟","🎵","🎶","🎀","🎪","⭐"];
 let SONGS=[];
-let mAudio=new Audio(), mIdx=0, mPlaying=false, mLoop="all", mShuf=false, mProgTmr=null;
+let mAudio=new Audio(), mIdx=0, mPlaying=false, musicWasPlayingBeforePause=false, mLoop="all", mShuf=false, mProgTmr=null;
 mAudio.volume=.1;
 
 async function loadSongs(){
