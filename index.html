@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.3-test-3</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-test-2</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -642,6 +642,12 @@ var FIREBASE_CONFIG = {
   measurementId:"G-ZB7430NTBR"
 };
 var FIREBASE_ENABLED = true;
+
+var DB_PATHS = {
+  legacyLeaderboard: 'tetris-balloon/leaderboard',
+  gameLogs:          'gameLogs/tetris',
+  leaderboards:      'leaderboards/tetris'
+};
 var db = null;
 var firebaseAuthReady = false;
 var firebaseInitPromise = null;
@@ -1542,57 +1548,100 @@ async function saveLB(){
   const ok = await ensureFirebaseReady();
   if(!ok){ console.warn("[Firebase] db not ready for save"); return; }
   const savedScore=score, savedLevel=level, savedLines=lines, savedDiff=diff;
+  const ts = Date.now();
+  const entry={
+    // 舊欄位（保留相容）
+    name:player.name, avKey:player.avKey,
+    score:savedScore, level:savedLevel, lines:savedLines,
+    difficulty:savedDiff, ts:ts,
+    // 新欄位
+    id:player.id,
+    playerKey:player.playerKey,
+    baseAvatarKey:player.baseAvatarKey,
+    displayAvatarKey:player.displayAvatarKey
+  };
   try{
-    const entry={
-      // 舊欄位（保留相容）
-      name:player.name, avKey:player.avKey,
-      score:savedScore, level:savedLevel, lines:savedLines,
-      difficulty:savedDiff, ts:Date.now(),
-      // 新欄位
-      id:player.id,
-      playerKey:player.playerKey,
-      baseAvatarKey:player.baseAvatarKey,
-      displayAvatarKey:player.displayAvatarKey
-    };
-    await db.ref("tetris-balloon/leaderboard").push(entry);
+    // 1. 舊路徑（相容保留）
+    await db.ref(DB_PATHS.legacyLeaderboard).push(entry);
+    // 2. gameLogs/tetris（每場都寫一筆）
+    await db.ref(DB_PATHS.gameLogs).push(entry);
+    // 3. leaderboards/tetris/{playerKey}（只保留最高分）
+    const pk = player.playerKey;
+    if(pk){
+      const lbRef = db.ref(DB_PATHS.leaderboards + '/' + pk);
+      const existing = await lbRef.get();
+      const cur = existing.val();
+      if(!cur || savedScore > cur.score || (savedScore === cur.score && ts > (cur.ts||0))){
+        await lbRef.set(entry);
+      }
+    }
     console.log("[saveLB] Saved! score="+savedScore+" playerKey="+player.playerKey);
   }catch(e){
     console.error("[saveLB] failed:",e.message);
   }
 }
+
 async function loadLB(){
   $("lb-list").innerHTML="<div class=\"lb-msg\">🎈 載入中...</div>";
   try{
     const ok = await ensureFirebaseReady();
     if(!ok){ $("lb-list").innerHTML="<div class=\"lb-msg\">Firebase 尚未登入成功，請稍後再試</div>"; return; }
-    // 讀取全部資料，在前端自己排序
-    const snap=await db.ref("tetris-balloon/leaderboard").get();
+
     let all=[];
-    snap.forEach(c=>{ var v=c.val(); all.push({id:c.key,name:v.name,avKey:v.avKey,score:v.score,level:v.level,lines:v.lines,difficulty:v.difficulty,ts:v.ts}); });
-    // 同ID+同頭像只保留最高分
+
+    // 同時讀 leaderboards/tetris 和 tetris-balloon/leaderboard，合併去重
+    const [lbSnap, legSnap] = await Promise.all([
+      db.ref(DB_PATHS.leaderboards).get(),
+      db.ref(DB_PATHS.legacyLeaderboard).get()
+    ]);
+
+    lbSnap.forEach(c=>{
+      var v=c.val(); if(!v||!v.score) return;
+      all.push({
+        name:v.name||"", avKey:v.avKey||"boy1",
+        id:v.id||"", playerKey:v.playerKey||"",
+        baseAvatarKey:v.baseAvatarKey||v.avKey||"boy1",
+        score:v.score, level:v.level||1, lines:v.lines||0,
+        difficulty:v.difficulty||"normal", ts:v.ts||0
+      });
+    });
+    legSnap.forEach(c=>{
+      var v=c.val(); if(!v||!v.score) return;
+      all.push({
+        name:v.name||"", avKey:v.avKey||"boy1",
+        id:v.id||"", playerKey:v.playerKey||"",
+        baseAvatarKey:v.baseAvatarKey||v.avKey||"boy1",
+        score:v.score, level:v.level||1, lines:v.lines||0,
+        difficulty:v.difficulty||"normal", ts:v.ts||0
+      });
+    });
+
+    // 去重：playerKey 優先，fallback name||avKey；同 key 保留最高分，相同分數保留較新 ts
     const best={};
     all.forEach(e=>{
-      // playerKey 優先，舊資料 fallback name||avKey
       const key = e.playerKey || ((e.name||"")+"||"+(e.avKey||""));
       if(!best[key] || e.score>best[key].score ||
          (e.score===best[key].score && (e.ts||0)>(best[key].ts||0))) best[key]=e;
     });
+
     let entries=Object.values(best);
     entries.sort((a,b)=>b.score-a.score);
     entries=entries.slice(0,30);
+
     if(!entries.length){$("lb-list").innerHTML="<div class=\"lb-msg\">還沒有紀錄！快來當第一名🎈</div>";return;}
     $("lb-list").innerHTML="";
     entries.forEach((e,i)=>{
-      const av=AVATARS.find(a=>a.key===e.avKey);
+      const av=AVATARS.find(a=>a.key===(e.baseAvatarKey||e.avKey));
       const rank=i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"";
-      const mine=e.name===player.name&&e.avKey===player.avKey;
+      const mine=(e.playerKey && e.playerKey===player.playerKey) ||
+                 (e.name===player.name && e.avKey===player.avKey);
       const dLabel={easy:"輕鬆",normal:"普通",hard:"挑戰"}[e.difficulty]||"";
       const row=document.createElement("div");
       row.className=`lb-row ${i<1?"r1":i<2?"r2":i<3?"r3":""} ${mine?"mine":""}`;
       row.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av">${av?`<img src="${av.url}" alt="">`:""}</div><div class="lb-info"><div class="lb-name">${e.name}${mine?" ⭐":""}</div><div class="lb-meta">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""}</div></div><div class="lb-score">${(e.score||0).toLocaleString()}</div>`;
       $("lb-list").appendChild(row);
     });
-  }catch(err){ console.error("LB Error:", err); $("lb-list").innerHTML="<div class=\"lb-msg\">載入失敗："+( err.message||String(err))+"</div>"; }
+  }catch(err){ console.error("LB Error:", err); $("lb-list").innerHTML="<div class=\"lb-msg\">載入失敗："+(err.message||String(err))+"</div>"; }
 }
 
 $("btn-lb").addEventListener("click",()=>{showScreen("s-lb");loadLB();});
@@ -1654,19 +1703,41 @@ async function loadAdminData(){
   try{
     const ok = await ensureFirebaseReady();
     if(!ok){ document.getElementById("adm-lb-list").innerHTML="<div style='color:red;padding:16px'>Firebase 尚未登入成功，請稍後再試</div>"; return; }
-    const snap=await db.ref("tetris-balloon/leaderboard").get();
-    allAdminEntries=[];
-    snap.forEach(c=>{ var v=c.val(); allAdminEntries.push({fbKey:c.key,name:v.name,avKey:v.avKey,score:v.score,level:v.level,lines:v.lines,difficulty:v.difficulty,ts:v.ts}); });
-    allAdminEntries.sort((a,b)=>b.score-a.score);
 
-    // Stats
-    const players=new Set(allAdminEntries.map(e=>e.name+"|"+e.avKey)).size;
-    const topScore=allAdminEntries[0]?.score||0;
+    allAdminEntries = [];
+
+    // 同時讀 gameLogs/tetris 和 tetris-balloon/leaderboard，合併顯示
+    const [glSnap, legSnap] = await Promise.all([
+      db.ref(DB_PATHS.gameLogs).get(),
+      db.ref(DB_PATHS.legacyLeaderboard).get()
+    ]);
+
+    glSnap.forEach(c=>{ var v=c.val(); if(!v) return; allAdminEntries.push({
+      fbKey:c.key, _source:"gameLogs",
+      name:v.name||"", avKey:v.avKey||"boy1",
+      id:v.id||"", playerKey:v.playerKey||"",
+      score:v.score||0, level:v.level||1, lines:v.lines||0,
+      difficulty:v.difficulty||"normal", ts:v.ts||0
+    }); });
+
+    legSnap.forEach(c=>{ var v=c.val(); if(!v) return; allAdminEntries.push({
+      fbKey:c.key, _source:"legacyLeaderboard",
+      name:v.name||"", avKey:v.avKey||"boy1",
+      id:v.id||"", playerKey:v.playerKey||"",
+      score:v.score||0, level:v.level||1, lines:v.lines||0,
+      difficulty:v.difficulty||"normal", ts:v.ts||0
+    }); });
+
+    // Stats（合併後不去重，直接統計）
+    const players=new Set(allAdminEntries.map(e=>(e.playerKey||e.name+"|"+e.avKey))).size;
+    const topScore=allAdminEntries.reduce((m,e)=>Math.max(m,e.score||0),0);
     document.getElementById("adm-total").textContent=allAdminEntries.length;
     document.getElementById("adm-players").textContent=players;
     document.getElementById("adm-topscore").textContent=topScore.toLocaleString();
 
-    // List
+    const countEl=document.getElementById("adm-count");
+    if(countEl) countEl.textContent="共 "+allAdminEntries.length+" 筆（gameLogs + legacy 合併）";
+
     renderAdminList();
   }catch(e){
     document.getElementById("adm-lb-list").innerHTML="<div style='color:#ff6b6b;text-align:center;padding:16px;'>載入失敗 😅</div>";
@@ -1714,7 +1785,7 @@ function renderAdminList(){
       </div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:12px;font-weight:800;color:#5a3a4a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.name||"?"}</div>
-        <div style="font-size:10px;color:#9b7a8a;">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""} · ${date}</div>
+        <div style="font-size:10px;color:#9b7a8a;">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""} · ${date}${e._source==="gameLogs"?" · <span style=color:#3ecf8e>GL</span>":""}</div>
       </div>
       <div style="font-family:'Fredoka One',cursive;font-size:16px;color:#3ecf8e;flex-shrink:0;">${(e.score||0).toLocaleString()}</div>
       <button onclick="deleteEntry('${e.fbKey}')" style="background:none;border:none;cursor:pointer;font-size:16px;color:#ff6b6b;padding:2px 4px;flex-shrink:0;">×</button>
@@ -1728,7 +1799,8 @@ window.deleteEntry=async function(fbKey){
   const ok = await ensureFirebaseReady();
   if(!ok){ toast("Firebase 尚未就緒"); return; }
   try{
-    await db.ref("tetris-balloon/leaderboard/"+fbKey).remove();
+    // 嘗試從 legacy 刪除（若是 legacy 資料）
+    await db.ref(DB_PATHS.legacyLeaderboard+"/"+fbKey).remove();
     allAdminEntries=allAdminEntries.filter(e=>e.fbKey!==fbKey);
     // Update stats
     const players=new Set(allAdminEntries.map(e=>e.name+"|"+e.avKey)).size;
@@ -1742,15 +1814,18 @@ window.deleteEntry=async function(fbKey){
 };
 
 document.getElementById("btn-adm-clear").addEventListener("click",async()=>{
-  if(!confirm("確定清空全部排行榜？此操作無法復原！")) return;
+  if(!confirm("這會清空排行榜資料（tetris-balloon/leaderboard 與 leaderboards/tetris），但會保留遊玩紀錄 gameLogs/tetris。確定繼續？")) return;
+  const ok = await ensureFirebaseReady();
+  if(!ok){ toast("Firebase 尚未就緒"); return; }
   try{
-    await db.ref("tetris-balloon/leaderboard").remove();
+    await db.ref(DB_PATHS.legacyLeaderboard).remove();
+    await db.ref(DB_PATHS.leaderboards).remove();
     allAdminEntries=[];
     document.getElementById("adm-total").textContent="0";
     document.getElementById("adm-players").textContent="0";
     document.getElementById("adm-topscore").textContent="0";
     renderAdminList();
-    toast("排行榜已清空");
+    toast("排行榜已清空（遊玩紀錄保留）");
   }catch(e){ toast("操作失敗"); }
 });
 
@@ -1760,7 +1835,7 @@ document.getElementById("btn-adm-export").addEventListener("click",()=>{
   const blob=new Blob([json],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="tetris_leaderboard_"+new Date().toISOString().slice(0,10)+".json";
+  a.download="tetris_gamelogs_"+new Date().toISOString().slice(0,10)+".json";
   a.click();
   toast("已匯出 JSON");
 });
