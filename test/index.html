@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-5</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-6</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1122,9 +1122,16 @@ function buildAvGrid(mode){
         if(!confirm("⚠️ 更換身份頭像會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新身份重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？")) return;
         PLAYER.baseAvatarKey = av.key;
         PLAYER.playerKey = makePlayerKey(PLAYER.id, av.key);
-        document.getElementById("base-avatar-preview").src = av.url;
         savePlayer();
-        loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; });
+        loadUnlockedAvatars().then(function(res){
+          unlockedAvatars = res || {};
+          validateDisplayAvatarForCurrentIdentity();
+          var bImg = document.getElementById("base-avatar-preview");
+          var dImg = document.getElementById("av-preview-img");
+          if(bImg) bImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
+          if(dImg) dImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+          buildAvGrid("base");
+        });
       } else {
         PLAYER.displayAvatarKey = av.key;
         PLAYER.avatarKey = av.key;
@@ -1190,12 +1197,17 @@ function goProfile(){
   localStorage.setItem("vtetris_firstRun","1");
   // 不預設展開頭像 grid，只同步預覽
   hideAvGrid();
-  var baseImg = document.getElementById("base-avatar-preview");
-  var dispImg = document.getElementById("av-preview-img");
-  var inp = document.getElementById("player-id-input");
-  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-  if(inp) inp.value = PLAYER.id;
+  // 讀取最新解鎖資料並驗證 displayAvatarKey
+  loadUnlockedAvatars().then(function(res){
+    unlockedAvatars = res || {};
+    validateDisplayAvatarForCurrentIdentity();
+    var baseImg = document.getElementById("base-avatar-preview");
+    var dispImg = document.getElementById("av-preview-img");
+    var inp = document.getElementById("player-id-input");
+    if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
+    if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+    if(inp) inp.value = PLAYER.id;
+  });
   showScreen("s-profile");
 }
 document.getElementById("btn-start").addEventListener("click", goProfile);
@@ -1276,10 +1288,17 @@ document.getElementById("btn-profile-ok").addEventListener("click",function(){
   var gname = document.getElementById("g-name");
   if(gname) gname.textContent = PLAYER.id;
   document.getElementById("profile-id-dirty-hint").style.display = "none";
-  hideAvGrid();
   savePlayer();
-  loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; });
-  showDiffSelect("profile");
+  loadUnlockedAvatars().then(function(res){
+    unlockedAvatars = res || {};
+    validateDisplayAvatarForCurrentIdentity();
+    var baseImg = document.getElementById("base-avatar-preview");
+    var dispImg = document.getElementById("av-preview-img");
+    if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
+    if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+    hideAvGrid();
+    showDiffSelect("profile");
+  });
 });
 
 // input dirty hint: 用 playerKey 判斷
@@ -1721,6 +1740,48 @@ function showSticker(key){
     img.className="pop-out";
     setTimeout(()=>{img.className="";img.src="";},200);
   },700);
+}
+
+
+function isBuiltinAvatar(key) {
+  return AVATARS.some(function(a){ return a.key === key; });
+}
+
+function isDisplayAvatarAllowed(key) {
+  if(!key) return false;
+  if(isBuiltinAvatar(key)) return true;
+  return !!(unlockedAvatars[key] && unlockedAvatars[key].unlocked);
+}
+
+function validateDisplayAvatarForCurrentIdentity() {
+  var currentDisplay = PLAYER.displayAvatarKey || PLAYER.avatarKey || PLAYER.baseAvatarKey || "boy1";
+  if(!isDisplayAvatarAllowed(currentDisplay)){
+    PLAYER.displayAvatarKey = PLAYER.baseAvatarKey || "boy1";
+    PLAYER.avatarKey = PLAYER.displayAvatarKey;
+    PLAYER.avKey = PLAYER.displayAvatarKey;
+    PLAYER.avatarSrc = getAvatarUrl(PLAYER.displayAvatarKey);
+    PLAYER.avUrl = PLAYER.avatarSrc;
+    localStorage.setItem("vtetris_displayAvatarKey", PLAYER.displayAvatarKey);
+    localStorage.setItem("vtetris_avKey", PLAYER.baseAvatarKey || "boy1");
+    var dispImg = document.getElementById("av-preview-img");
+    if(dispImg) dispImg.src = PLAYER.avatarSrc;
+    var gAvatar = document.getElementById("g-avatar");
+    if(gAvatar) gAvatar.src = PLAYER.avatarSrc;
+    if(FIREBASE_ENABLED && firebaseDb && PLAYER.playerKey){
+      firebaseDb.ref(DB_PATHS.players + "/" + PLAYER.playerKey + "/profile").update({
+        displayAvatarKey: PLAYER.displayAvatarKey,
+        avatarKey: PLAYER.displayAvatarKey,
+        updatedAt: Date.now()
+      });
+    }
+    return false;
+  }
+  PLAYER.displayAvatarKey = currentDisplay;
+  PLAYER.avatarKey = currentDisplay;
+  PLAYER.avKey = currentDisplay;
+  PLAYER.avatarSrc = getAvatarUrl(currentDisplay);
+  PLAYER.avUrl = PLAYER.avatarSrc;
+  return true;
 }
 
 
@@ -2424,17 +2485,21 @@ loadSongs();
 document.getElementById("btn-how").addEventListener("click",()=>{
   toast("← → 移動　↑ 旋轉　↓ 加速　空白 落下　Esc 暫停",4000);
 });
-document.getElementById("btn-change-profile").addEventListener("click",()=>{
+document.getElementById("btn-change-profile").addEventListener("click",function(){
   loadPlayer();
-  var baseImg = document.getElementById("base-avatar-preview");
-  var dispImg = document.getElementById("av-preview-img");
-  var inp = document.getElementById("player-id-input");
-  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-  if(inp) inp.value = PLAYER.id;
-  document.getElementById("profile-id-dirty-hint").style.display = "none";
   hideAvGrid();
+  document.getElementById("profile-id-dirty-hint").style.display = "none";
   showScreen("s-profile");
+  loadUnlockedAvatars().then(function(res){
+    unlockedAvatars = res || {};
+    validateDisplayAvatarForCurrentIdentity();
+    var baseImg = document.getElementById("base-avatar-preview");
+    var dispImg = document.getElementById("av-preview-img");
+    var inp = document.getElementById("player-id-input");
+    if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
+    if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+    if(inp) inp.value = PLAYER.id;
+  });
 });
 
 window.addEventListener("resize",()=>{
