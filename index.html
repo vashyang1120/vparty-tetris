@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-5</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -373,47 +373,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 </div>
 
 <!-- PROFILE -->
-<div id="s-profile" class="screen off" style="overflow-y:auto;justify-content:flex-start;padding:16px;">
-  <h2 style="margin:12px 0 16px;font-size:20px;">✨ 玩家設定</h2>
-
-  <!-- ID 輸入 -->
-  <div style="width:min(480px,94vw);margin-bottom:12px;">
-    <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:4px;">🏷️ 玩家 ID（最多 16 字）</div>
-    <input type="text" id="player-id-input" maxlength="16" placeholder="輸入你的名字..."
-      style="width:100%;background:#fff;border:2px solid var(--pink-lt);border-radius:var(--r-xl);color:var(--text);padding:10px 16px;font-size:16px;outline:none;">
-    <div id="profile-id-dirty-hint" style="font-size:11px;color:#ff6b6b;margin-top:4px;display:none;">⚠️ 你已變更玩家 ID，請先按「確認」切換身份。</div>
-  </div>
-
-  <!-- 雙頭像區塊 -->
-  <div style="width:min(480px,94vw);display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
-    <!-- 身份頭像 -->
-    <div style="flex:1;min-width:180px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;text-align:center;box-shadow:var(--shadow-sm);">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px;">🔑 身份頭像</div>
-      <img id="base-avatar-preview" src="" alt="" style="width:64px;height:64px;border-radius:50%;border:3px solid var(--pink);object-fit:cover;margin:0 auto 6px;display:block;">
-      <div style="font-size:10px;color:var(--text2);line-height:1.4;margin-bottom:8px;">決定玩家身份與解鎖進度</div>
-      <button class="btn btn-outline btn-sm" id="btn-change-base-avatar">變更身份頭像</button>
+<div id="s-profile" class="screen off">
+  <h2>✨ 選擇你的角色</h2>
+  <div class="profile-layout">
+    <div class="av-preview">
+      <img id="av-preview-img" src="" alt="頭像">
+      <div style="font-size:11px;color:var(--text2);font-weight:700">你的頭像</div>
     </div>
-    <!-- 顯示頭像 -->
-    <div style="flex:1;min-width:180px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;text-align:center;box-shadow:var(--shadow-sm);">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px;">🎨 顯示頭像</div>
-      <img id="av-preview-img" src="" alt="" style="width:64px;height:64px;border-radius:50%;border:3px solid var(--purple);object-fit:cover;margin:0 auto 6px;display:block;">
-      <div style="font-size:10px;color:var(--text2);line-height:1.4;margin-bottom:8px;">只影響外觀與排行榜顯示</div>
-      <button class="btn btn-outline btn-sm" id="btn-change-display-avatar">變更顯示頭像</button>
+    <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-width:200px">
+      <div class="id-box">
+        <label>🏷️ 玩家名稱</label>
+        <input type="text" id="player-id-input" maxlength="16" placeholder="輸入你的名字...">
+      </div>
+      <div class="av-section">
+        <label>🎨 選擇頭像</label>
+        <div id="av-grid"></div>
+      </div>
     </div>
   </div>
-
-  <!-- 按鈕列 -->
-  <div style="width:min(480px,94vw);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-    <button class="btn btn-p" id="btn-profile-ok">🎈 確認出發！</button>
-    <button class="btn btn-outline btn-sm" id="btn-unlock-collection">🏆 頭像收藏</button>
+  <div class="profile-btns">
+    <button class="btn btn-p" id="btn-profile-ok">🎈 出發！</button>
     <button class="btn btn-outline btn-sm" id="btn-profile-back">← 返回</button>
-  </div>
-  <div style="font-size:11px;color:var(--text2);margin-top:8px;">設定會自動儲存，下次直接開始！</div>
-
-  <!-- 頭像選擇 Grid（動態顯示）-->
-  <div id="av-grid-wrap" style="display:none;width:min(480px,94vw);margin-top:12px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;box-shadow:var(--shadow-sm);">
-    <div id="av-grid-title" style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px;"></div>
-    <div id="av-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;max-height:240px;overflow-y:auto;"></div>
+    <div style="font-size:11px;color:var(--text2)">設定會自動儲存，下次直接開始！</div>
   </div>
 </div>
 
@@ -586,18 +567,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     </div>
   </div>
 
-  <!-- 遠端 PIN 解鎖 -->
-  <div style="background:#fff;border-radius:24px;box-shadow:0 4px 20px rgba(62,207,142,.12);border:1.5px solid rgba(62,207,142,.2);padding:20px;width:min(520px,94vw);margin-bottom:14px;">
-    <div style="font-size:13px;font-weight:800;color:#3ecf8e;margin-bottom:12px;">🔓 遠端 PIN 解鎖</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <input type="text" id="adm-pin-input" placeholder="輸入 PIN 碼" maxlength="6"
-        style="flex:1;min-width:120px;background:#f0fff8;border:2px solid rgba(62,207,142,.3);border-radius:50px;padding:8px 16px;font-size:14px;outline:none;">
-      <input type="text" id="adm-pin-playerkey" placeholder="玩家 playerKey（選填）" maxlength="80"
-        style="flex:2;min-width:180px;background:#f0fff8;border:2px solid rgba(62,207,142,.3);border-radius:50px;padding:8px 16px;font-size:12px;outline:none;">
-      <button class="btn btn-sm" id="btn-adm-pin" style="background:linear-gradient(135deg,#3ecf8e,#2ab377);color:#fff;">解鎖</button>
-    </div>
-  </div>
-
   <!-- 更改密碼 -->
   <div style="background:#fff;border-radius:24px;box-shadow:0 4px 20px rgba(62,207,142,.12);border:1.5px solid rgba(62,207,142,.2);padding:20px;width:min(520px,94vw);margin-bottom:14px;">
     <div style="font-size:13px;font-weight:800;color:#3ecf8e;margin-bottom:12px;">更改後台密碼</div>
@@ -674,45 +643,14 @@ var FIREBASE_CONFIG = {
 };
 var FIREBASE_ENABLED = true;
 
-// ── 解鎖頭像清單 ──
-var UNLOCK_AV_BASE = "https://vashyang1120.github.io/vparty-rhythm-game/assets/avatars/";
-var UNLOCKABLE_AVATARS = [
-  { key: 'xiaov_base',         name: '小V',         file: UNLOCK_AV_BASE + 'xiaov_base.png',         tier: 'wave1', unlockCategory: 'first_play',   unlockText: '完成任一遊戲 1 場' },
-  { key: 'dance_sister_01',    name: '唱跳姐姐',    file: UNLOCK_AV_BASE + 'dance_sister_01.png',    tier: 'wave1', unlockCategory: 'social_ig_fb', unlockText: '追蹤 IG 或 FB 粉專' },
-  { key: 'balloon_sister_01',  name: '氣球姐姐 1',  file: UNLOCK_AV_BASE + 'balloon_sister_01.png',  tier: 'wave1', unlockCategory: 'social_line',  unlockText: '加官方 LINE 好友' },
-  { key: 'balloon_sister_02',  name: '氣球姐姐 2',  file: UNLOCK_AV_BASE + 'balloon_sister_02.png',  tier: 'wave1', unlockCategory: 'social_google',unlockText: 'Google 商家 5 星好評' },
-  { key: 'balloon_brother_01', name: '氣球哥哥 1',  file: UNLOCK_AV_BASE + 'balloon_brother_01.png', tier: 'wave2', unlockCategory: 'game_tetris',  unlockText: '方塊遊戲達 2,000 分' },
-  { key: 'balloon_brother_02', name: '氣球哥哥 2',  file: UNLOCK_AV_BASE + 'balloon_brother_02.png', tier: 'wave2', unlockCategory: 'game_rhythm',  unlockText: '節奏遊戲任一首達 A 以上' },
-  { key: 'balloon_brother_03', name: '氣球哥哥 3',  file: UNLOCK_AV_BASE + 'balloon_brother_03.png', tier: 'wave2', unlockCategory: 'game_adventure',unlockText: '冒險遊戲通過指定進度' },
-  { key: 'bubble_brother_01',  name: '泡泡哥哥',    file: UNLOCK_AV_BASE + 'bubble_brother_01.png',  tier: 'rare',  unlockCategory: 'event',        unlockText: '泡泡活動限定 / 特別活動' },
-  { key: 'xiaov_special',      name: '小V 特別版',  file: UNLOCK_AV_BASE + 'xiaov_special.png',      tier: 'rare',  unlockCategory: 'special',      unlockText: '打敗小V / 特別活動 / 高階成就' }
-];
-
-
-// ── PIN ──
-var ADMIN_UNLOCK_PIN = '952740';
-var REMOTE_UNLOCK_PINS = {
-  '1101': 'xiaov_base',
-  '1201': 'dance_sister_01',
-  '1202': 'balloon_sister_01',
-  '1203': 'balloon_sister_02',
-  '2101': 'balloon_brother_01',
-  '2102': 'balloon_brother_02',
-  '2103': 'balloon_brother_03'
-};
-
 var DB_PATHS = {
   legacyLeaderboard: 'tetris-balloon/leaderboard',
   gameLogs:          'gameLogs/tetris',
-  leaderboards:      'leaderboards/tetris',
-  players:           'players'
+  leaderboards:      'leaderboards/tetris'
 };
 var db = null;
-var firebaseDb = null;
 var firebaseAuthReady = false;
 var firebaseInitPromise = null;
-var unlockedAvatars = {};
-var newlyUnlockedThisGame = [];
 function ensureFirebaseReady() {
   if (!FIREBASE_ENABLED) return Promise.resolve(false);
   if (firebaseAuthReady && db) return Promise.resolve(true);
@@ -725,7 +663,6 @@ function ensureFirebaseReady() {
         firebase.auth().signInAnonymously()
           .then(function() {
             db = firebase.database();
-            firebaseDb = db;
             firebaseAuthReady = true;
             console.log('[Firebase] Auth + DB ready ✓');
             resolve(true);
@@ -769,140 +706,6 @@ function initFirebase() {
   ensureFirebaseReady();
 }
 
-// ── 共用玩家身份系統 ──
-function ensurePlayerProfile() {
-  if (!FIREBASE_ENABLED) return Promise.resolve();
-  return ensureFirebaseReady().then(function(ok) {
-    if (!ok || !firebaseDb) return;
-    var pKey = PLAYER.playerKey;
-    if (!pKey) return;
-    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').once('value').then(function(snap) {
-      var profile = snap.val();
-      if (!profile) {
-        // 建立新 profile
-        var newProfile = {
-          id: PLAYER.id,
-          name: PLAYER.id,
-          playerKey: pKey,
-          baseAvatarKey: PLAYER.baseAvatarKey,
-          displayAvatarKey: PLAYER.displayAvatarKey,
-          avatarKey: PLAYER.avatarKey,
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        };
-        return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').set(newProfile);
-      } else {
-        // 同步 displayAvatarKey（不改 baseAvatarKey / playerKey）
-        if (profile.displayAvatarKey && profile.displayAvatarKey !== PLAYER.displayAvatarKey) {
-          PLAYER.displayAvatarKey = profile.displayAvatarKey;
-          PLAYER.avatarKey = profile.displayAvatarKey;
-          PLAYER.avatarSrc = getAvatarByKey(profile.displayAvatarKey).src;
-        }
-      }
-    });
-  });
-}
-
-
-function loadUnlockedAvatars() {
-  if (!FIREBASE_ENABLED) return Promise.resolve({});
-  return ensureFirebaseReady().then(function(ok) {
-    if (!ok || !firebaseDb) return {};
-    var pKey = PLAYER.playerKey;
-    if (!pKey) return {};
-    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/unlockedAvatars').once('value').then(function(snap) {
-      unlockedAvatars = {};
-      snap.forEach(function(child) {
-        unlockedAvatars[child.key] = child.val();
-      });
-      return unlockedAvatars;
-    });
-  }).catch(function() { return {}; });
-}
-
-
-function unlockAvatar(avatarKey, source) {
-  if (!avatarKey) return Promise.resolve(false);
-  if (unlockedAvatars[avatarKey] && unlockedAvatars[avatarKey].unlocked) return Promise.resolve(false); // 已解鎖
-
-  if (!FIREBASE_ENABLED) {
-    console.warn('[Unlock] Firebase disabled，無法解鎖');
-    return Promise.resolve(false);
-  }
-
-  return ensureFirebaseReady().then(function(ok) {
-    if (!ok || !firebaseDb) {
-      console.warn('[Unlock] Firebase 未就緒，無法解鎖');
-      return false;
-    }
-    var pKey = PLAYER.playerKey;
-    if (!pKey) {
-      console.warn('[Unlock] playerKey 不存在');
-      return false;
-    }
-    var entry = { unlocked: true, source: source || 'manual', unlockedAt: Date.now() };
-    return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/unlockedAvatars/' + avatarKey).set(entry)
-      .then(function() {
-        // Firebase 寫入成功才同步本機
-        unlockedAvatars[avatarKey] = entry;
-        newlyUnlockedThisGame.push(avatarKey); // 記錄本場新解鎖
-        return true;
-      });
-  }).catch(function(e) {
-    console.warn('[Unlock] Firebase 寫入失敗:', e.message);
-    return false; // 不假裝成功
-  });
-}
-
-
-function equipDisplayAvatar(avatarKey) {
-  if (!avatarKey) return;
-  if (!unlockedAvatars[avatarKey] || !unlockedAvatars[avatarKey].unlocked) {
-    console.warn('[Equip] avatarKey not unlocked:', avatarKey);
-    return;
-  }
-  // 只更新 displayAvatarKey / avatarKey，絕不改 baseAvatarKey / playerKey
-  PLAYER.displayAvatarKey = avatarKey;
-  PLAYER.avatarKey = avatarKey;
-  PLAYER.avatarSrc = getAvatarByKey(avatarKey).src;
-
-  // 同步 UI
-  var sbAv = document.getElementById('sb-avatar');
-  if (sbAv) sbAv.src = PLAYER.avatarSrc;
-  var prev = document.getElementById('avatar-preview');
-  if (prev) prev.src = PLAYER.avatarSrc;
-
-  // 同步 localStorage
-  var profile = JSON.parse(localStorage.getItem('vPartyPlayerProfile') || '{}');
-  profile.displayAvatarKey = avatarKey;
-  profile.avatarKey = avatarKey;
-  localStorage.setItem('vPartyPlayerProfile', JSON.stringify(profile));
-  localStorage.setItem('vPartyProfile', JSON.stringify({ id: PLAYER.id, avatarKey: avatarKey }));
-
-  // 同步 Firebase profile
-  if (FIREBASE_ENABLED) {
-    ensureFirebaseReady().then(function(ok) {
-      if (!ok || !firebaseDb) return;
-      var pKey = PLAYER.playerKey;
-      if (!pKey) return;
-      firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').update({
-        displayAvatarKey: avatarKey,
-        avatarKey: avatarKey,
-        updatedAt: Date.now()
-      });
-    });
-  }
-}
-
-
-function isProfileIdentityDirty() {
-  var inputId = normalizePlayerId(document.getElementById('player-id-input').value);
-  var inputKey = makePlayerKey(inputId, PLAYER.baseAvatarKey);
-  return inputKey !== PLAYER.playerKey;
-}
-
-
-
 // ── IMAGE DATA ──
 const IMG = {
   clear1:  "https://vashyang1120.github.io/vparty-tetris/assets/Clear1.png",
@@ -938,17 +741,10 @@ const AVATARS = [
 ];
 
 // ── PLAYER ──
-// 升級為雙頭像版 PLAYER
-var PLAYER = {
-  id: '玩家',
-  baseAvatarKey: 'boy1',
-  displayAvatarKey: 'boy1',
-  avatarKey: 'boy1',
-  avatarSrc: '',
-  playerKey: ''
+let player = {
+  name: "", id: "", avKey: "boy1", avUrl: "",
+  baseAvatarKey: "boy1", displayAvatarKey: "boy1", playerKey: ""
 };
-// 相容舊版 player 指向
-var player = PLAYER;
 
 function getLeaderboardIdentityKey(e) {
   var id = normalizePlayerId(e.id || e.name || "");
@@ -963,36 +759,16 @@ function getLeaderboardIdentityKey(e) {
 }
 
 function normalizePlayerId(id) {
-  return (id || '').trim() || '玩家';
+  return String(id || '').trim().replace(/\s+/g, ' ').slice(0, 16);
 }
-
-function encodeFirebaseKeyPart(s) {
-  return encodeURIComponent(normalizePlayerId(s))
-    .replace(/\./g, '%2E')
-    .replace(/#/g, '%23')
-    .replace(/\$/g, '%24')
-    .replace(/\[/g, '%5B')
-    .replace(/\]/g, '%5D');
-}
-
-
 function makePlayerKey(id, baseAvatarKey) {
-  return encodeFirebaseKeyPart(id) + '__' + (baseAvatarKey || 'boy1');
+  return encodeURIComponent(normalizePlayerId(id)) + '__' + (baseAvatarKey || 'boy1');
 }
-
 function getAvatarByKey(key) {
-  var builtin = AVATARS.find(function(a){ return a.key === key; });
-  if (builtin) return { key: builtin.key, url: builtin.url || builtin.src, src: builtin.url || builtin.src, name: builtin.label || builtin.key };
-  var unlock = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
-  if (unlock) {
-    var src = unlock.src || unlock.file;
-    return { key: unlock.key, url: src, src: src, name: unlock.name };
-  }
-  return { key: AVATARS[0].key, url: AVATARS[0].url, src: AVATARS[0].url, name: AVATARS[0].label };
+  return AVATARS.find(function(a){ return a.key === key; }) || AVATARS[0];
 }
 function getAvatarUrl(key) {
-  var av = getAvatarByKey(key);
-  return av.url || av.src;
+  return getAvatarByKey(key).url;
 }
 
 function loadPlayer(){
@@ -1006,27 +782,24 @@ function loadPlayer(){
                    || "boy1";
   var displayAvatarKey = localStorage.getItem("vtetris_displayAvatarKey") || baseAvatarKey;
 
-  PLAYER.id              = normalizePlayerId(id);
-  PLAYER.name            = PLAYER.id;
-  PLAYER.baseAvatarKey   = baseAvatarKey;
-  PLAYER.displayAvatarKey = displayAvatarKey;
-  PLAYER.avatarKey       = displayAvatarKey;
-  PLAYER.avKey           = displayAvatarKey;
-  PLAYER.avatarSrc       = getAvatarUrl(displayAvatarKey);
-  PLAYER.avUrl           = PLAYER.avatarSrc;
-  PLAYER.playerKey       = makePlayerKey(PLAYER.id, baseAvatarKey);
+  player.id              = normalizePlayerId(id);
+  player.name            = player.id;
+  player.baseAvatarKey   = baseAvatarKey;
+  player.displayAvatarKey = displayAvatarKey;
+  player.avKey           = baseAvatarKey;
+  player.avUrl           = getAvatarUrl(baseAvatarKey);
+  player.playerKey       = makePlayerKey(player.id, baseAvatarKey);
 }
 function savePlayer(){
-  var id   = normalizePlayerId(PLAYER.id || PLAYER.name);
-  var base = PLAYER.baseAvatarKey || PLAYER.avKey || "boy1";
-  var disp = PLAYER.displayAvatarKey || base;
+  var id   = normalizePlayerId(player.id || player.name);
+  var base = player.baseAvatarKey || player.avKey || "boy1";
+  var disp = player.displayAvatarKey || base;
   var pk   = makePlayerKey(id, base);
 
-  PLAYER.id = id; PLAYER.name = id;
-  PLAYER.baseAvatarKey = base; PLAYER.displayAvatarKey = disp;
-  PLAYER.avatarKey = disp; PLAYER.avKey = disp;
-  PLAYER.playerKey = pk;
-  PLAYER.avatarSrc = getAvatarUrl(disp); PLAYER.avUrl = PLAYER.avatarSrc;
+  player.id = id; player.name = id;
+  player.baseAvatarKey = base; player.displayAvatarKey = disp;
+  player.avKey = base; player.playerKey = pk;
+  player.avUrl = getAvatarUrl(base);
 
   localStorage.setItem("vtetris_playerId",          id);
   localStorage.setItem("vtetris_baseAvatarKey",     base);
@@ -1034,9 +807,6 @@ function savePlayer(){
   localStorage.setItem("vtetris_playerKey",         pk);
   localStorage.setItem("vtetris_name",  id);
   localStorage.setItem("vtetris_avKey", base);
-
-  // 同步到 Firebase players 共用路徑
-  ensurePlayerProfile();
 }
 
 // ── TOAST ──
@@ -1052,7 +822,6 @@ function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.add("off"));
   document.getElementById(id).classList.remove("off");
   const isGame = id==="s-game";
-  if(!isGame) clearGameVisualState();
   const isMobile = window.innerWidth < 900 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   document.getElementById("mob-ctrl").style.display = (isGame && isMobile)?"flex":"none";
   // Show fullscreen btn only on game screen
@@ -1090,211 +859,54 @@ document.addEventListener("webkitfullscreenchange",()=>{
 });
 
 // ── PROFILE ──
-function buildAvGrid(mode){
-  // mode: 'base' = 身份頭像（只選內建）, 'display' = 顯示頭像（內建+已解鎖）
-  var wrap = document.getElementById("av-grid-wrap");
-  var title = document.getElementById("av-grid-title");
-  var grid = document.getElementById("av-grid");
-  if(!wrap || !grid) return;
-
-  if(mode === 'base'){
-    title.textContent = "🔑 選擇身份頭像（只限內建頭像）";
-  } else {
-    title.textContent = "🎨 選擇顯示頭像";
-  }
-  wrap.style.display = "block";
-  grid.innerHTML = "";
-
-  // 內建頭像
-  AVATARS.forEach(function(av){
-    var img = document.createElement("img");
-    img.className = "av-item";
-    img.src = av.url; img.alt = av.label || av.key;
-    var isSelected = mode === 'base' ? (av.key === PLAYER.baseAvatarKey) : (av.key === PLAYER.displayAvatarKey);
-    if(isSelected) img.classList.add("sel");
-    img.addEventListener("click", function(){
-      if(isProfileIdentityDirty()){
-        if(mode === 'base') toast("你已變更玩家 ID。請先按「確認」完成身份切換，再變更身份頭像。");
-        else toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。");
-        return;
-      }
-      if(mode === 'base'){
-        if(!confirm("⚠️ 更換身份頭像會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新身份重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？")) return;
-        PLAYER.baseAvatarKey = av.key;
-        PLAYER.playerKey = makePlayerKey(PLAYER.id, av.key);
-        document.getElementById("base-avatar-preview").src = av.url;
-        savePlayer();
-        loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; });
-      } else {
-        PLAYER.displayAvatarKey = av.key;
-        PLAYER.avatarKey = av.key;
-        PLAYER.avKey = av.key;
-        var selSrc = av.url || av.src || av.file || imgSrc || '';
-        PLAYER.avatarSrc = selSrc; PLAYER.avUrl = selSrc;
-        document.getElementById("av-preview-img").src = selSrc;
-        localStorage.setItem("vtetris_displayAvatarKey", av.key);
-        localStorage.setItem("vtetris_playerKey", PLAYER.playerKey);
-      }
-      grid.querySelectorAll(".av-item").forEach(function(i){ i.classList.remove("sel"); });
+function buildAvGrid(){
+  const grid=document.getElementById("av-grid"); grid.innerHTML="";
+  AVATARS.forEach(av=>{
+    const img=document.createElement("img");
+    img.className="av-item"; img.src=av.url; img.alt=av.label;
+    if(av.key===player.avKey) img.classList.add("sel");
+    img.addEventListener("click",()=>{
+      document.querySelectorAll(".av-item").forEach(i=>i.classList.remove("sel"));
       img.classList.add("sel");
+      player.avKey            = av.key;
+      player.baseAvatarKey    = av.key;
+      player.displayAvatarKey = av.key;
+      player.playerKey        = makePlayerKey(player.id || player.name, av.key);
+      player.avUrl            = av.url;
+      document.getElementById("av-preview-img").src = av.url;
     });
     grid.appendChild(img);
   });
-
-  // 顯示頭像模式：加入已解鎖頭像
-  if(mode === 'display'){
-    UNLOCKABLE_AVATARS.forEach(function(av){
-      var isUnlocked = unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked;
-      var imgSrc = av.src || av.file || "";
-      var img = document.createElement("img");
-      img.src = imgSrc; img.alt = av.name;
-      img.style.cssText = "width:56px;height:56px;border-radius:50%;cursor:" + (isUnlocked?"pointer":"not-allowed") + ";opacity:" + (isUnlocked?"1":"0.35") + ";border:3px solid " + (isUnlocked?"var(--mint)":"#ccc") + ";object-fit:cover;transition:all .15s;";
-      if(av.key === PLAYER.displayAvatarKey) img.style.borderColor = "var(--purple)";
-      if(!isUnlocked){
-        img.title = "🔒 " + av.name + " - " + (av.hint || "尚未解鎖");
-        img.addEventListener("click", function(){ toast("🔒 尚未解鎖：" + av.name); });
-      } else {
-        img.title = av.name;
-        img.addEventListener("click", function(){
-          if(isProfileIdentityDirty()){ toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。"); return; }
-          var unlSelSrc = av.src || av.file || imgSrc || "";
-          PLAYER.displayAvatarKey = av.key;
-          PLAYER.avatarKey = av.key; PLAYER.avKey = av.key;
-          PLAYER.avatarSrc = unlSelSrc; PLAYER.avUrl = unlSelSrc;
-          document.getElementById("av-preview-img").src = unlSelSrc;
-          localStorage.setItem("vtetris_displayAvatarKey", av.key);
-          // 同步 Firebase profile
-          ensureFirebaseReady().then(function(ok){
-            if(!ok || !firebaseDb || !PLAYER.playerKey) return;
-            firebaseDb.ref(DB_PATHS.players + "/" + PLAYER.playerKey + "/profile").update({
-              displayAvatarKey: av.key, avatarKey: av.key, updatedAt: Date.now()
-            });
-          });
-          grid.querySelectorAll("img").forEach(function(i){ i.style.borderColor = ""; });
-          img.style.borderColor = "var(--purple)";
-        });
-      }
-      grid.appendChild(img);
-    });
-  }
-}
-
-function hideAvGrid(){
-  var wrap = document.getElementById("av-grid-wrap");
-  if(wrap) wrap.style.display = "none";
+  const av=AVATARS.find(a=>a.key===player.avKey)||AVATARS[0];
+  document.getElementById("av-preview-img").src=av.url;
+  document.getElementById("player-id-input").value=player.name;
 }
 function goProfile(){
   loadPlayer();
   const firstRun=!localStorage.getItem("vtetris_firstRun");
-  if(PLAYER.id && PLAYER.id !== '玩家' && !firstRun){ showDiffSelect(); return; }
+  if(player.name && !firstRun){ showDiffSelect(); return; }
   localStorage.setItem("vtetris_firstRun","1");
-  // 不預設展開頭像 grid，只同步預覽
-  hideAvGrid();
-  var baseImg = document.getElementById("base-avatar-preview");
-  var dispImg = document.getElementById("av-preview-img");
-  var inp = document.getElementById("player-id-input");
-  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-  if(inp) inp.value = PLAYER.id;
-  showScreen("s-profile");
+  buildAvGrid(); showScreen("s-profile");
 }
 document.getElementById("btn-start").addEventListener("click", goProfile);
-document.getElementById("btn-profile-back").addEventListener("click",()=>{hideAvGrid();showScreen("s-title");});
-
-// ── 身份頭像按鈕 ──
-document.getElementById("btn-change-base-avatar").addEventListener("click", function(){
-  if(isProfileIdentityDirty()){
-    toast("你已變更玩家 ID。請先按「確認」完成身份切換，再變更身份頭像。");
-    return;
-  }
-  var wrap = document.getElementById("av-grid-wrap");
-  var titleEl = document.getElementById("av-grid-title");
-  if(wrap && wrap.style.display !== "none" && titleEl && titleEl.textContent.indexOf("身份") >= 0){
-    hideAvGrid();
-  } else {
-    buildAvGrid("base");
-  }
-});
-
-// ── 顯示頭像按鈕 ──
-document.getElementById("btn-change-display-avatar").addEventListener("click", function(){
-  if(isProfileIdentityDirty()){
-    toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。");
-    return;
-  }
-  var wrap = document.getElementById("av-grid-wrap");
-  var titleEl = document.getElementById("av-grid-title");
-  if(wrap && wrap.style.display !== "none" && titleEl && titleEl.textContent.indexOf("顯示") >= 0){
-    hideAvGrid();
-  } else {
-    // 先讀 Firebase 再 render
-    loadUnlockedAvatars().then(function(res){
-      unlockedAvatars = res || {};
-      buildAvGrid("display");
-    });
-  }
-});
-
-// ── 頭像收藏按鈕 ──
-document.getElementById("btn-unlock-collection").addEventListener("click", function(){
-  if(isProfileIdentityDirty()){
-    toast("你已變更玩家 ID。請先按「確認」完成身份切換，再查看頭像收藏。");
-    return;
-  }
-  var wrap = document.getElementById("av-grid-wrap");
-  if(wrap && wrap.style.display !== "none"){
-    hideAvGrid();
-  } else {
-    // 先讀 Firebase 再 render
-    loadUnlockedAvatars().then(function(res){
-      unlockedAvatars = res || {};
-      // 標題改為「頭像收藏」
-      var titleEl = document.getElementById("av-grid-title");
-      buildAvGrid("display");
-      if(titleEl) titleEl.textContent = "🏆 頭像收藏（已解鎖頭像）";
-    });
-  }
-});
-
-document.getElementById("btn-profile-ok").addEventListener("click",function(){
-  var rawName = document.getElementById("player-id-input").value.trim();
-  if(!rawName){ toast("請輸入你的名字！"); return; }
-  var newId = normalizePlayerId(rawName);
-  var base = PLAYER.baseAvatarKey || "boy1";
-  var newPlayerKey = makePlayerKey(newId, base);
-  var isChangingIdentity = newPlayerKey !== PLAYER.playerKey;
-  if(isChangingIdentity){
-    if(!confirm("⚠️ 更改玩家 ID 會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新 ID 重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？")){
-      document.getElementById("player-id-input").value = PLAYER.id;
-      var hint = document.getElementById("profile-id-dirty-hint");
-      if(hint) hint.style.display = "none";
-      return;
-    }
-  }
-  PLAYER.id = newId; PLAYER.name = newId;
-  PLAYER.playerKey = newPlayerKey;
-  var gname = document.getElementById("g-name");
-  if(gname) gname.textContent = PLAYER.id;
-  document.getElementById("profile-id-dirty-hint").style.display = "none";
-  hideAvGrid();
+document.getElementById("btn-profile-back").addEventListener("click",()=>showScreen("s-title"));
+document.getElementById("btn-profile-ok").addEventListener("click",()=>{
+  const name=document.getElementById("player-id-input").value.trim();
+  if(!name){ toast("請輸入你的名字！"); return; }
+  const base = player.baseAvatarKey || player.avKey || "boy1";
+  // 同步更新所有身份欄位，確保新 ID 完整覆蓋
+  player.id        = normalizePlayerId(name);
+  player.name      = player.id;
+  player.playerKey = makePlayerKey(player.id, base);
+  // 更新 HUD 名稱
+  const gname = document.getElementById("g-name");
+  if(gname) gname.textContent = player.id;
   savePlayer();
-  loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; });
-  showDiffSelect("profile");
-});
-
-// input dirty hint: 用 playerKey 判斷
-document.getElementById("player-id-input").addEventListener("input", function(){
-  var inputId = normalizePlayerId(this.value);
-  var inputKey = makePlayerKey(inputId, PLAYER.baseAvatarKey || "boy1");
-  var hint = document.getElementById("profile-id-dirty-hint");
-  if(hint) hint.style.display = (inputKey !== PLAYER.playerKey) ? "block" : "none";
+  showDiffSelect();
 });
 
 // ── DIFFICULTY SELECT ──
-var diffBackTarget = "title";
-
-function showDiffSelect(backTarget){
-  diffBackTarget = backTarget || "title";
+function showDiffSelect(){
   showScreen("s-game");
   document.getElementById("g-overlay").classList.remove("off");
   document.getElementById("ov-title").textContent="🎈 選擇難度";
@@ -1313,18 +925,7 @@ function showDiffSelect(backTarget){
   bBack.style.cssText="margin-top:8px;width:100%;max-width:240px;";
   bBack.addEventListener("click",()=>{
     document.getElementById("g-overlay").classList.add("off");
-    if(diffBackTarget === "profile"){
-      var baseImg = document.getElementById("base-avatar-preview");
-      var dispImg = document.getElementById("av-preview-img");
-      var inp = document.getElementById("player-id-input");
-      if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-      if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-      if(inp) inp.value = PLAYER.id;
-      hideAvGrid();
-      showScreen("s-profile");
-    } else {
-      showScreen("s-title");
-    }
+    showScreen("s-title");
   });
   row.appendChild(bBack);
 }
@@ -1399,8 +1000,8 @@ function startGame(d){
   $("board-wrap").classList.remove("danger");
   const si=$("sticker-img"); si.className=""; si.src="";
   $("g-overlay").classList.add("off");
-  $("g-avatar").src=PLAYER.avatarSrc||PLAYER.avUrl||"";
-  $("g-name").textContent=PLAYER.id||PLAYER.name||"Player";
+  $("g-avatar").src=player.avUrl||"";
+  $("g-name").textContent=player.name||"Player";
   $("pause-btn").textContent="⏸ 暫停";
   updateHUD();
   if(raf) cancelAnimationFrame(raf);
@@ -1723,16 +1324,6 @@ function showSticker(key){
   },700);
 }
 
-
-function clearGameVisualState(){
-  var danger = document.getElementById("danger-img");
-  if(danger){ danger.classList.remove("show"); danger.style.opacity = ""; }
-  var boardWrap = document.getElementById("board-wrap");
-  if(boardWrap) boardWrap.classList.remove("danger");
-  var sticker = document.getElementById("sticker-img");
-  if(sticker){ sticker.className = ""; sticker.src = ""; }
-}
-
 // danger
 function checkDanger(){
   let highest=ROWS;
@@ -1755,62 +1346,9 @@ function showLvFlash(){
 }
 
 // game over
-
-// ── 解鎖通知 ──
-function showUnlockNotice(keys){
-  if(!keys || !keys.length) return;
-  var names = keys.map(function(k){
-    var av = UNLOCKABLE_AVATARS.find(function(a){ return a.key===k; });
-    return av ? av.name : k;
-  });
-  var nameList = names.map(function(n){ return '・' + n; }).join('\n');
-  var msg = '🎉 恭喜解鎖新頭像！\n你已解鎖：\n' + nameList;
-  // 建立通知覆蓋層
-  var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(10,5,25,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;';
-  var title = document.createElement('div');
-  title.style.cssText = 'font-size:20px;font-weight:900;color:#ffd166;text-align:center;white-space:pre-line;';
-  title.textContent = msg;
-  var avatarRow = document.createElement('div');
-  avatarRow.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
-  keys.forEach(function(k){
-    var av = UNLOCKABLE_AVATARS.find(function(a){ return a.key===k; });
-    if(av){
-      var img = document.createElement('img');
-      img.src = av.src || av.file || ''; img.style.cssText = 'width:64px;height:64px;border-radius:50%;border:3px solid #ffd166;';
-      avatarRow.appendChild(img);
-    }
-  });
-  var btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
-  var btnEquip = document.createElement('button');
-  btnEquip.className = 'btn btn-y'; btnEquip.textContent = '前往頭像收藏';
-  btnEquip.onclick = function(){ document.body.removeChild(ov); showScreen('s-profile'); };
-  var btnSkip = document.createElement('button');
-  btnSkip.className = 'btn btn-outline'; btnSkip.textContent = '稍後再說';
-  btnSkip.onclick = function(){ document.body.removeChild(ov); };
-  btnRow.appendChild(btnEquip); btnRow.appendChild(btnSkip);
-  ov.appendChild(title); ov.appendChild(avatarRow); ov.appendChild(btnRow);
-  document.body.appendChild(ov);
-}
-
 function gameOver(){
   running=false;
-  clearGameVisualState();
   sfx.gameOver();
-  // ── 方塊遊戲自動解鎖 ──
-  newlyUnlockedThisGame = [];
-  var unlockPromises = [];
-  // 1. xiaov_base：完成任一場方塊遊戲
-  unlockPromises.push(unlockAvatar('xiaov_base', 'tetris_complete'));
-  // 2. balloon_brother_01：單場分數達 2000 分
-  if(score >= 2000) unlockPromises.push(unlockAvatar('balloon_brother_01', 'tetris_score_2000'));
-  // 等解鎖完成後顯示提示
-  Promise.all(unlockPromises).then(function() {
-    if(newlyUnlockedThisGame.length > 0) {
-      window._pendingUnlockNotice = newlyUnlockedThisGame.slice();
-    }
-  });
   const prev=parseInt(localStorage.getItem("vtetris_best")||"0");
   const isNew=score>prev;
   if(isNew){ localStorage.setItem("vtetris_best",score); updateBestDisp(); }
@@ -1824,13 +1362,6 @@ function gameOver(){
     $("res-emoji").textContent=em[Math.min(level-1,em.length-1)];
     $("new-best").style.display=isNew?"block":"none";
     showScreen("s-result");
-  // 顯示本場新解鎖頭像通知
-  setTimeout(function(){
-    if(window._pendingUnlockNotice && window._pendingUnlockNotice.length > 0){
-      showUnlockNotice(window._pendingUnlockNotice);
-      window._pendingUnlockNotice = [];
-    }
-  }, 800);
   },500);
 }
 
@@ -1859,7 +1390,7 @@ function togglePause(){
       musicWasPlayingBeforePause=false;
     });
     const b2=document.createElement("button"); b2.className="btn btn-outline"; b2.textContent="🏠 離開";
-    b2.addEventListener("click",()=>{running=false;if(raf)cancelAnimationFrame(raf);clearGameVisualState();showScreen("s-title");});
+    b2.addEventListener("click",()=>{running=false;if(raf)cancelAnimationFrame(raf);showScreen("s-title");});
     row.appendChild(b1); row.appendChild(b2);
   } else {
     // ESC 直接恢復（不經由按鈕）
@@ -2059,22 +1590,21 @@ $("btn-music-title").addEventListener("click",openMusic);
 // ── LEADERBOARD ──
 
 async function saveLB(){
-  if(!PLAYER.id && !PLAYER.name) return;
+  if(!player.id && !player.name) return;
   const ok = await ensureFirebaseReady();
   if(!ok){ console.warn("[Firebase] db not ready for save"); return; }
   const savedScore=score, savedLevel=level, savedLines=lines, savedDiff=diff;
   const ts = Date.now();
   const entry={
-    gameId:'tetris',
-    name:PLAYER.name, avKey:PLAYER.avKey,
+    // 舊欄位（保留相容）
+    name:player.name, avKey:player.avKey,
     score:savedScore, level:savedLevel, lines:savedLines,
     difficulty:savedDiff, ts:ts,
-    id:PLAYER.id,
-    playerKey:PLAYER.playerKey,
-    baseAvatarKey:PLAYER.baseAvatarKey,
-    displayAvatarKey:PLAYER.displayAvatarKey,
-    avatarKey:PLAYER.avatarKey,
-    peakCombo:peakCombo||0
+    // 新欄位
+    id:player.id,
+    playerKey:player.playerKey,
+    baseAvatarKey:player.baseAvatarKey,
+    displayAvatarKey:player.displayAvatarKey
   };
   try{
     // 1. 舊路徑（相容保留）
@@ -2082,7 +1612,7 @@ async function saveLB(){
     // 2. gameLogs/tetris（每場都寫一筆）
     await db.ref(DB_PATHS.gameLogs).push(entry);
     // 3. leaderboards/tetris/{playerKey}（只保留最高分）
-    const pk = PLAYER.playerKey;
+    const pk = player.playerKey;
     if(pk){
       const lbRef = db.ref(DB_PATHS.leaderboards + '/' + pk);
       const existing = await lbRef.get();
@@ -2091,7 +1621,7 @@ async function saveLB(){
         await lbRef.set(entry);
       }
     }
-    console.log("[saveLB] Saved! score="+savedScore+" playerKey="+PLAYER.playerKey);
+    console.log("[saveLB] Saved! score="+savedScore+" playerKey="+player.playerKey);
   }catch(e){
     console.error("[saveLB] failed:",e.message);
   }
@@ -2117,8 +1647,6 @@ async function loadLB(){
         name:v.name||"", avKey:v.avKey||"boy1",
         id:v.id||"", playerKey:v.playerKey||"",
         baseAvatarKey:v.baseAvatarKey||v.avKey||"boy1",
-        displayAvatarKey:v.displayAvatarKey||v.avatarKey||v.avKey||v.baseAvatarKey||"boy1",
-        avatarKey:v.avatarKey||v.displayAvatarKey||v.avKey||"boy1",
         score:v.score, level:v.level||1, lines:v.lines||0,
         difficulty:v.difficulty||"normal", ts:v.ts||0
       });
@@ -2129,8 +1657,6 @@ async function loadLB(){
         name:v.name||"", avKey:v.avKey||"boy1",
         id:v.id||"", playerKey:v.playerKey||"",
         baseAvatarKey:v.baseAvatarKey||v.avKey||"boy1",
-        displayAvatarKey:v.displayAvatarKey||v.avatarKey||v.avKey||v.baseAvatarKey||"boy1",
-        avatarKey:v.avatarKey||v.displayAvatarKey||v.avKey||"boy1",
         score:v.score, level:v.level||1, lines:v.lines||0,
         difficulty:v.difficulty||"normal", ts:v.ts||0
       });
@@ -2151,16 +1677,14 @@ async function loadLB(){
     if(!entries.length){$("lb-list").innerHTML="<div class=\"lb-msg\">還沒有紀錄！快來當第一名🎈</div>";return;}
     $("lb-list").innerHTML="";
     entries.forEach((e,i)=>{
-      const displayKey=e.displayAvatarKey||e.avatarKey||e.avKey||e.baseAvatarKey||"boy1";
-      const av=getAvatarByKey(displayKey);
-      const avUrl=getAvatarUrl(displayKey);
+      const av=AVATARS.find(a=>a.key===(e.baseAvatarKey||e.avKey));
       const rank=i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"";
-      const mine=(e.playerKey && e.playerKey===PLAYER.playerKey) ||
-                 (e.name===PLAYER.name && e.avKey===PLAYER.avKey);
+      const mine=(e.playerKey && e.playerKey===player.playerKey) ||
+                 (e.name===player.name && e.avKey===player.avKey);
       const dLabel={easy:"輕鬆",normal:"普通",hard:"挑戰"}[e.difficulty]||"";
       const row=document.createElement("div");
       row.className=`lb-row ${i<1?"r1":i<2?"r2":i<3?"r3":""} ${mine?"mine":""}`;
-      row.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av"><img src="${avUrl}" alt="" onerror="this.style.display='none'"></div><div class="lb-info"><div class="lb-name">${e.name}${mine?" ⭐":""}</div><div class="lb-meta">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""}</div></div><div class="lb-score">${(e.score||0).toLocaleString()}</div>`;
+      row.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av">${av?`<img src="${av.url}" alt="">`:""}</div><div class="lb-info"><div class="lb-name">${e.name}${mine?" ⭐":""}</div><div class="lb-meta">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""}</div></div><div class="lb-score">${(e.score||0).toLocaleString()}</div>`;
       $("lb-list").appendChild(row);
     });
   }catch(err){ console.error("LB Error:", err); $("lb-list").innerHTML="<div class=\"lb-msg\">載入失敗："+(err.message||String(err))+"</div>"; }
@@ -2170,16 +1694,7 @@ $("btn-lb").addEventListener("click",()=>{showScreen("s-lb");loadLB();});
 $("btn-lb-back").addEventListener("click",()=>showScreen("s-title"));
 $("btn-res-lb").addEventListener("click",()=>{showScreen("s-lb");loadLB();});
 $("btn-res-home").addEventListener("click",()=>showScreen("s-title"));
-$("btn-res-profile").addEventListener("click",()=>{ loadPlayer();
-  var baseImg = document.getElementById("base-avatar-preview");
-  var dispImg = document.getElementById("av-preview-img");
-  var inp = document.getElementById("player-id-input");
-  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-  if(inp) inp.value = PLAYER.id;
-  document.getElementById("profile-id-dirty-hint").style.display = "none";
-  hideAvGrid();
-  showScreen("s-profile"); });
+$("btn-res-profile").addEventListener("click",()=>{ loadPlayer(); buildAvGrid(); showScreen("s-profile"); });
 $("btn-replay").addEventListener("click",showDiffSelect);
 
 // ── BEST SCORE ──
@@ -2317,8 +1832,7 @@ function renderAdminList(){
   else if(adminSortMode==='score_desc') sorted.sort((a,b)=>b.score-a.score);
   else if(adminSortMode==='score_asc') sorted.sort((a,b)=>a.score-b.score);
   sorted.forEach((e,i)=>{
-    const admDisplayKey=e.displayAvatarKey||e.avatarKey||e.avKey||e.baseAvatarKey||"boy1";
-    const admAvUrl=getAvatarUrl(admDisplayKey);
+    const av=AVATARS.find(a=>a.key===e.avKey);
     const date=e.ts?new Date(e.ts).toLocaleDateString("zh-TW"):"";
     const dLabel={easy:"輕鬆",normal:"普通",hard:"挑戰"}[e.difficulty]||"";
     const row=document.createElement("div");
@@ -2326,7 +1840,7 @@ function renderAdminList(){
     row.innerHTML=`
       <div style="width:22px;text-align:center;font-family:'Fredoka One',cursive;font-size:14px;color:#9b7a8a;">${i+1}</div>
       <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e0f7ef;display:flex;align-items:center;justify-content:center;">
-        <img src="${admAvUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.textContent='🎈'">
+        ${av?`<img src="${av.url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='🎈'">`:"🎈"}
       </div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:12px;font-weight:800;color:#5a3a4a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.name||"?"}</div>
@@ -2407,17 +1921,9 @@ window.addEventListener('resize', notifyParentHeight);
 setTimeout(notifyParentHeight, 500);
 
 initFirebase();
-ensureFirebaseReady().then(function(){ loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; }); });
 initBalloon();
 $("danger-img").src=IMG.danger;
 loadPlayer();
-// 同步 profile 頁頭像預覽
-(function(){
-  var baseImg = document.getElementById("base-avatar-preview");
-  var dispImg = document.getElementById("av-preview-img");
-  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-})();
 updateBestDisp();
 loadSongs();
 
@@ -2425,16 +1931,10 @@ document.getElementById("btn-how").addEventListener("click",()=>{
   toast("← → 移動　↑ 旋轉　↓ 加速　空白 落下　Esc 暫停",4000);
 });
 document.getElementById("btn-change-profile").addEventListener("click",()=>{
-  loadPlayer();
-  var baseImg = document.getElementById("base-avatar-preview");
-  var dispImg = document.getElementById("av-preview-img");
-  var inp = document.getElementById("player-id-input");
-  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-  if(inp) inp.value = PLAYER.id;
-  document.getElementById("profile-id-dirty-hint").style.display = "none";
-  hideAvGrid();
-  showScreen("s-profile");
+  loadPlayer(); buildAvGrid(); showScreen("s-profile");
+});
+document.getElementById("btn-change-profile").addEventListener("click",()=>{
+  loadPlayer(); buildAvGrid(); showScreen("s-profile");
 });
 
 window.addEventListener("resize",()=>{
@@ -2442,25 +1942,6 @@ window.addEventListener("resize",()=>{
   initCanvas(); draw();
 });
 
-
-// PIN 解鎖
-$("btn-adm-pin").addEventListener("click", async function(){
-  var pin = ($("adm-pin-input").value || "").trim();
-  var targetKey = ($("adm-pin-playerkey").value || "").trim() || PLAYER.playerKey;
-  if(!pin){ toast("請輸入 PIN 碼"); return; }
-  var avatarKey = REMOTE_UNLOCK_PINS[pin];
-  if(!avatarKey){ toast("PIN 碼無效"); return; }
-  if(!targetKey){ toast("請輸入玩家 playerKey"); return; }
-  var ok = await ensureFirebaseReady();
-  if(!ok){ toast("Firebase 未就緒"); return; }
-  try{
-    await db.ref("players/" + targetKey + "/unlockedAvatars/" + avatarKey).set({
-      unlocked: true, source: "remote_pin_" + pin, ts: Date.now()
-    });
-    toast("✅ 已解鎖 " + avatarKey + " → " + targetKey);
-    $("adm-pin-input").value = "";
-  }catch(e){ toast("解鎖失敗：" + e.message); }
-});
 </script>
 </body>
 </html>
