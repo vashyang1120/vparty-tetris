@@ -328,7 +328,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);
   background:rgba(26,10,46,.9);color:#fff;border-radius:var(--r-xl);
   padding:10px 20px;font-size:13px;font-weight:700;z-index:999;
-  transition:opacity .3s;opacity:0;pointer-events:none;white-space:nowrap;
+  white-space:pre-line;text-align:center;
+  transition:opacity .3s;opacity:0;pointer-events:none;
   border:1px solid rgba(255,133,161,.3)}
 #toast.show{opacity:1}
 .admin-lnk{position:fixed;bottom:4px;right:8px;font-size:9px;color:rgba(255,255,255,.12);cursor:pointer;z-index:100}
@@ -353,7 +354,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.5</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.6</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -381,7 +382,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:4px;">🏷️ 玩家 ID（最多 16 字）</div>
     <input type="text" id="player-id-input" maxlength="16" placeholder="輸入你的名字..."
       style="width:100%;background:#fff;border:2px solid var(--pink-lt);border-radius:var(--r-xl);color:var(--text);padding:10px 16px;font-size:16px;outline:none;">
-    <div id="profile-id-dirty-hint" style="font-size:11px;color:#ff6b6b;margin-top:4px;display:none;">⚠️ 你已變更玩家 ID，請先按「確認」切換身份。</div>
+    <div id="profile-id-dirty-hint" style="font-size:11px;color:#ff6b6b;margin-top:4px;display:none;">⚠️ 你正在變更玩家身份，請按「確認」完成切換。</div>
   </div>
 
   <!-- 雙頭像區塊 -->
@@ -959,6 +960,8 @@ var PLAYER = {
 };
 // 相容舊版 player 指向
 var player = PLAYER;
+var profileOriginalId = "";
+var profileOriginalBaseAvatarKey = "";
 
 function getLeaderboardIdentityKey(e) {
   var id = normalizePlayerId(e.id || e.name || "");
@@ -1123,12 +1126,21 @@ function buildAvGrid(mode){
     var isSelected = mode === 'base' ? (av.key === PLAYER.baseAvatarKey) : (av.key === PLAYER.displayAvatarKey);
     if(isSelected) img.classList.add("sel");
     img.addEventListener("click", function(){
-      if(isProfileIdentityDirty()){
-        if(mode === 'base') toast("你已變更玩家 ID。請先按「確認」完成身份切換，再變更身份頭像。");
-        else toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。");
+      // display 模式下阻擋 dirty；base 模式允許 dirty（等確認時統一切換）
+      if(mode === 'display' && isProfileIdentityDirty()){
+        toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。");
         return;
       }
       if(mode === 'base'){
+        if(isProfileIdentityDirty()){
+          // dirty 狀態：只暫存選擇，不 savePlayer / Firebase，等確認時統一切換
+          PLAYER.baseAvatarKey = av.key;
+          var bImg = document.getElementById("base-avatar-preview");
+          if(bImg) bImg.src = getAvatarUrl(av.key);
+          grid.querySelectorAll(".av-item").forEach(function(i){ i.classList.remove("sel"); });
+          img.classList.add("sel");
+          return;
+        }
         if(!confirm("⚠️ 更換身份頭像會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新身份重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？")) return;
         PLAYER.baseAvatarKey = av.key;
         PLAYER.playerKey = makePlayerKey(PLAYER.id, av.key);
@@ -1151,6 +1163,15 @@ function buildAvGrid(mode){
         document.getElementById("av-preview-img").src = selSrc;
         localStorage.setItem("vtetris_displayAvatarKey", av.key);
         localStorage.setItem("vtetris_playerKey", PLAYER.playerKey);
+        // 同步 Firebase profile（只改 displayAvatarKey，不改 baseAvatarKey / playerKey）
+        ensureFirebaseReady().then(function(ok){
+          if(!ok || !firebaseDb || !PLAYER.playerKey) return;
+          firebaseDb.ref(DB_PATHS.players + "/" + PLAYER.playerKey + "/profile").update({
+            displayAvatarKey: av.key,
+            avatarKey: av.key,
+            updatedAt: Date.now()
+          });
+        });
       }
       grid.querySelectorAll(".av-item").forEach(function(i){ i.classList.remove("sel"); });
       img.classList.add("sel");
@@ -1169,7 +1190,10 @@ function buildAvGrid(mode){
       if(av.key === PLAYER.displayAvatarKey) img.style.borderColor = "var(--purple)";
       if(!isUnlocked){
         img.title = "🔒 " + av.name + " - " + (av.hint || "尚未解鎖");
-        img.addEventListener("click", function(){ toast("🔒 尚未解鎖：" + av.name); });
+        img.addEventListener("click", function(){
+          var condition = av.unlockText || av.hint || "尚未開放";
+          toast("🔒 " + av.name + " 尚未解鎖\n解鎖條件：" + condition, 4000);
+        });
       } else {
         img.title = av.name;
         img.addEventListener("click", function(){
@@ -1206,6 +1230,9 @@ function goProfile(){
   if(PLAYER.id && PLAYER.id !== '玩家' && !firstRun){ showDiffSelect(); return; }
   localStorage.setItem("vtetris_firstRun","1");
   // 不預設展開頭像 grid，只同步預覽
+  // 保存進入設定頁時的原始身份，供取消時還原
+  profileOriginalId = PLAYER.id;
+  profileOriginalBaseAvatarKey = PLAYER.baseAvatarKey;
   hideAvGrid();
   // 讀取最新解鎖資料並驗證 displayAvatarKey
   loadUnlockedAvatars().then(function(res){
@@ -1225,10 +1252,7 @@ document.getElementById("btn-profile-back").addEventListener("click",()=>{hideAv
 
 // ── 身份頭像按鈕 ──
 document.getElementById("btn-change-base-avatar").addEventListener("click", function(){
-  if(isProfileIdentityDirty()){
-    toast("你已變更玩家 ID。請先按「確認」完成身份切換，再變更身份頭像。");
-    return;
-  }
+  // ID dirty 時仍允許變更身份頭像（兩者一起在按「確認」時統一切換）
   var wrap = document.getElementById("av-grid-wrap");
   var titleEl = document.getElementById("av-grid-title");
   if(wrap && wrap.style.display !== "none" && titleEl && titleEl.textContent.indexOf("身份") >= 0){
@@ -1273,7 +1297,7 @@ document.getElementById("btn-unlock-collection").addEventListener("click", funct
       // 標題改為「頭像收藏」
       var titleEl = document.getElementById("av-grid-title");
       buildAvGrid("display");
-      if(titleEl) titleEl.textContent = "🏆 頭像收藏（已解鎖頭像）";
+      if(titleEl) titleEl.textContent = "🏆 頭像收藏";
     });
   }
 });
@@ -1282,36 +1306,40 @@ document.getElementById("btn-profile-ok").addEventListener("click",function(){
   var rawName = document.getElementById("player-id-input").value.trim();
   if(!rawName){ toast("請輸入你的名字！"); return; }
   var newId = normalizePlayerId(rawName);
-  var base = PLAYER.baseAvatarKey || "boy1";
-  var newPlayerKey = makePlayerKey(newId, base);
-  var isChangingIdentity = newPlayerKey !== PLAYER.playerKey;
+  var newBase = PLAYER.baseAvatarKey || "boy1"; // 含玩家本次選擇的身份頭像
+  var newPlayerKey = makePlayerKey(newId, newBase);
+  var isChangingIdentity = newPlayerKey !== makePlayerKey(profileOriginalId || PLAYER.id, profileOriginalBaseAvatarKey || newBase);
   if(isChangingIdentity){
-    if(!confirm("⚠️ 更改玩家 ID 會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新 ID 重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？")){
-      document.getElementById("player-id-input").value = PLAYER.id;
+    if(!confirm("⚠️ 更改玩家 ID 或身份頭像會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新身份重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？")){
+      // 取消：還原原始身份
+      PLAYER.id = profileOriginalId;
+      PLAYER.name = profileOriginalId;
+      PLAYER.baseAvatarKey = profileOriginalBaseAvatarKey;
+      PLAYER.playerKey = makePlayerKey(profileOriginalId, profileOriginalBaseAvatarKey);
+      document.getElementById("player-id-input").value = profileOriginalId;
+      var bImg = document.getElementById("base-avatar-preview");
+      if(bImg) bImg.src = getAvatarUrl(profileOriginalBaseAvatarKey);
       var hint = document.getElementById("profile-id-dirty-hint");
       if(hint) hint.style.display = "none";
+      hideAvGrid();
       return;
     }
   }
-  // 更新身份
+  // 確認：正式更新身份
   PLAYER.id = newId; PLAYER.name = newId;
+  PLAYER.baseAvatarKey = newBase;
   PLAYER.playerKey = newPlayerKey;
-  // 若是身份切換，先保守重設 displayAvatarKey 為 baseAvatarKey
-  if(isChangingIdentity){
-    PLAYER.displayAvatarKey = base;
-    PLAYER.avatarKey = base;
-    PLAYER.avKey = base;
-    PLAYER.avatarSrc = getAvatarUrl(base);
-    PLAYER.avUrl = PLAYER.avatarSrc;
-  }
+  // 保守重設 displayAvatarKey 為 baseAvatarKey，等 loadUnlockedAvatars 後再驗證
+  PLAYER.displayAvatarKey = newBase;
+  PLAYER.avatarKey = newBase;
+  PLAYER.avKey = newBase;
+  PLAYER.avatarSrc = getAvatarUrl(newBase);
+  PLAYER.avUrl = PLAYER.avatarSrc;
   document.getElementById("profile-id-dirty-hint").style.display = "none";
-  // savePlayer 在 loadUnlockedAvatars 前，此時 displayAvatarKey 已是合法值
   savePlayer();
   loadUnlockedAvatars().then(function(res){
     unlockedAvatars = res || {};
-    // 驗證是否有更佳的雲端 displayAvatarKey（已解鎖的才會恢復）
     validateDisplayAvatarForCurrentIdentity();
-    // 更新所有頭像 UI
     var baseImg = document.getElementById("base-avatar-preview");
     var dispImg = document.getElementById("av-preview-img");
     var gAv = document.getElementById("g-avatar");
@@ -1330,8 +1358,9 @@ document.getElementById("btn-profile-ok").addEventListener("click",function(){
 document.getElementById("player-id-input").addEventListener("input", function(){
   var inputId = normalizePlayerId(this.value);
   var inputKey = makePlayerKey(inputId, PLAYER.baseAvatarKey || "boy1");
+  var origKey = makePlayerKey(profileOriginalId || PLAYER.id, profileOriginalBaseAvatarKey || PLAYER.baseAvatarKey || "boy1");
   var hint = document.getElementById("profile-id-dirty-hint");
-  if(hint) hint.style.display = (inputKey !== PLAYER.playerKey) ? "block" : "none";
+  if(hint) hint.style.display = (inputKey !== origKey) ? "block" : "none";
 });
 
 // ── DIFFICULTY SELECT ──
@@ -2512,6 +2541,9 @@ document.getElementById("btn-how").addEventListener("click",()=>{
 });
 document.getElementById("btn-change-profile").addEventListener("click",function(){
   loadPlayer();
+  // 保存進入設定頁時的原始身份，供取消時還原
+  profileOriginalId = PLAYER.id;
+  profileOriginalBaseAvatarKey = PLAYER.baseAvatarKey;
   hideAvGrid();
   document.getElementById("profile-id-dirty-hint").style.display = "none";
   showScreen("s-profile");
