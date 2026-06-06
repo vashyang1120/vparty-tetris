@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-4</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -405,7 +405,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   <!-- 按鈕列 -->
   <div style="width:min(480px,94vw);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
     <button class="btn btn-p" id="btn-profile-ok">🎈 確認出發！</button>
-    <button class="btn btn-outline btn-sm" id="btn-unlock-collection">🏆 解鎖 / 更換頭像</button>
+    <button class="btn btn-outline btn-sm" id="btn-unlock-collection">🏆 頭像收藏</button>
     <button class="btn btn-outline btn-sm" id="btn-profile-back">← 返回</button>
   </div>
   <div style="font-size:11px;color:var(--text2);margin-top:8px;">設定會自動儲存，下次直接開始！</div>
@@ -675,16 +675,17 @@ var FIREBASE_CONFIG = {
 var FIREBASE_ENABLED = true;
 
 // ── 解鎖頭像清單 ──
+var UNLOCK_AV_BASE = "https://vashyang1120.github.io/vparty-rhythm-game/assets/avatars/";
 var UNLOCKABLE_AVATARS = [
-  { key: 'xiaov_base',         name: '小V',         file: 'assets/avatars/xiaov_base.png',         tier: 'wave1', unlockCategory: 'first_play',   unlockText: '完成任一遊戲 1 場' },
-  { key: 'dance_sister_01',    name: '唱跳姐姐',    file: 'assets/avatars/dance_sister_01.png',    tier: 'wave1', unlockCategory: 'social_ig_fb', unlockText: '追蹤 IG 或 FB 粉專' },
-  { key: 'balloon_sister_01',  name: '氣球姐姐 1',  file: 'assets/avatars/balloon_sister_01.png',  tier: 'wave1', unlockCategory: 'social_line',  unlockText: '加官方 LINE 好友' },
-  { key: 'balloon_sister_02',  name: '氣球姐姐 2',  file: 'assets/avatars/balloon_sister_02.png',  tier: 'wave1', unlockCategory: 'social_google',unlockText: 'Google 商家 5 星好評' },
-  { key: 'balloon_brother_01', name: '氣球哥哥 1',  file: 'assets/avatars/balloon_brother_01.png', tier: 'wave2', unlockCategory: 'game_tetris',  unlockText: '方塊遊戲達 2,000 分' },
-  { key: 'balloon_brother_02', name: '氣球哥哥 2',  file: 'assets/avatars/balloon_brother_02.png', tier: 'wave2', unlockCategory: 'game_rhythm',  unlockText: '節奏遊戲任一首達 A 以上' },
-  { key: 'balloon_brother_03', name: '氣球哥哥 3',  file: 'assets/avatars/balloon_brother_03.png', tier: 'wave2', unlockCategory: 'game_adventure',unlockText: '冒險遊戲通過指定進度' },
-  { key: 'bubble_brother_01',  name: '泡泡哥哥',    file: 'assets/avatars/bubble_brother_01.png',  tier: 'rare',  unlockCategory: 'event',        unlockText: '泡泡活動限定 / 特別活動' },
-  { key: 'xiaov_special',      name: '小V 特別版',  file: 'assets/avatars/xiaov_special.png',      tier: 'rare',  unlockCategory: 'special',      unlockText: '打敗小V / 特別活動 / 高階成就' }
+  { key: 'xiaov_base',         name: '小V',         file: UNLOCK_AV_BASE + 'xiaov_base.png',         tier: 'wave1', unlockCategory: 'first_play',   unlockText: '完成任一遊戲 1 場' },
+  { key: 'dance_sister_01',    name: '唱跳姐姐',    file: UNLOCK_AV_BASE + 'dance_sister_01.png',    tier: 'wave1', unlockCategory: 'social_ig_fb', unlockText: '追蹤 IG 或 FB 粉專' },
+  { key: 'balloon_sister_01',  name: '氣球姐姐 1',  file: UNLOCK_AV_BASE + 'balloon_sister_01.png',  tier: 'wave1', unlockCategory: 'social_line',  unlockText: '加官方 LINE 好友' },
+  { key: 'balloon_sister_02',  name: '氣球姐姐 2',  file: UNLOCK_AV_BASE + 'balloon_sister_02.png',  tier: 'wave1', unlockCategory: 'social_google',unlockText: 'Google 商家 5 星好評' },
+  { key: 'balloon_brother_01', name: '氣球哥哥 1',  file: UNLOCK_AV_BASE + 'balloon_brother_01.png', tier: 'wave2', unlockCategory: 'game_tetris',  unlockText: '方塊遊戲達 2,000 分' },
+  { key: 'balloon_brother_02', name: '氣球哥哥 2',  file: UNLOCK_AV_BASE + 'balloon_brother_02.png', tier: 'wave2', unlockCategory: 'game_rhythm',  unlockText: '節奏遊戲任一首達 A 以上' },
+  { key: 'balloon_brother_03', name: '氣球哥哥 3',  file: UNLOCK_AV_BASE + 'balloon_brother_03.png', tier: 'wave2', unlockCategory: 'game_adventure',unlockText: '冒險遊戲通過指定進度' },
+  { key: 'bubble_brother_01',  name: '泡泡哥哥',    file: UNLOCK_AV_BASE + 'bubble_brother_01.png',  tier: 'rare',  unlockCategory: 'event',        unlockText: '泡泡活動限定 / 特別活動' },
+  { key: 'xiaov_special',      name: '小V 特別版',  file: UNLOCK_AV_BASE + 'xiaov_special.png',      tier: 'rare',  unlockCategory: 'special',      unlockText: '打敗小V / 特別活動 / 高階成就' }
 ];
 
 
@@ -980,10 +981,18 @@ function makePlayerKey(id, baseAvatarKey) {
 }
 
 function getAvatarByKey(key) {
-  return AVATARS.find(function(a){ return a.key === key; }) || AVATARS[0];
+  var builtin = AVATARS.find(function(a){ return a.key === key; });
+  if (builtin) return { key: builtin.key, url: builtin.url || builtin.src, src: builtin.url || builtin.src, name: builtin.label || builtin.key };
+  var unlock = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
+  if (unlock) {
+    var src = unlock.src || unlock.file;
+    return { key: unlock.key, url: src, src: src, name: unlock.name };
+  }
+  return { key: AVATARS[0].key, url: AVATARS[0].url, src: AVATARS[0].url, name: AVATARS[0].label };
 }
 function getAvatarUrl(key) {
-  return getAvatarByKey(key).url;
+  var av = getAvatarByKey(key);
+  return av.url || av.src;
 }
 
 function loadPlayer(){
@@ -1090,7 +1099,7 @@ function buildAvGrid(mode){
   if(mode === 'base'){
     title.textContent = "🔑 選擇身份頭像（只限內建頭像）";
   } else {
-    title.textContent = "🎨 選擇顯示頭像（內建 + 已解鎖）";
+    title.textContent = "🎨 選擇顯示頭像";
   }
   wrap.style.display = "block";
   grid.innerHTML = "";
@@ -1119,8 +1128,9 @@ function buildAvGrid(mode){
         PLAYER.displayAvatarKey = av.key;
         PLAYER.avatarKey = av.key;
         PLAYER.avKey = av.key;
-        PLAYER.avatarSrc = av.url; PLAYER.avUrl = av.url;
-        document.getElementById("av-preview-img").src = av.url;
+        var selSrc = av.url || av.src || av.file || imgSrc || '';
+        PLAYER.avatarSrc = selSrc; PLAYER.avUrl = selSrc;
+        document.getElementById("av-preview-img").src = selSrc;
         localStorage.setItem("vtetris_displayAvatarKey", av.key);
         localStorage.setItem("vtetris_playerKey", PLAYER.playerKey);
       }
@@ -1134,8 +1144,9 @@ function buildAvGrid(mode){
   if(mode === 'display'){
     UNLOCKABLE_AVATARS.forEach(function(av){
       var isUnlocked = unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked;
+      var imgSrc = av.src || av.file || "";
       var img = document.createElement("img");
-      img.src = av.src; img.alt = av.name;
+      img.src = imgSrc; img.alt = av.name;
       img.style.cssText = "width:56px;height:56px;border-radius:50%;cursor:" + (isUnlocked?"pointer":"not-allowed") + ";opacity:" + (isUnlocked?"1":"0.35") + ";border:3px solid " + (isUnlocked?"var(--mint)":"#ccc") + ";object-fit:cover;transition:all .15s;";
       if(av.key === PLAYER.displayAvatarKey) img.style.borderColor = "var(--purple)";
       if(!isUnlocked){
@@ -1145,11 +1156,19 @@ function buildAvGrid(mode){
         img.title = av.name;
         img.addEventListener("click", function(){
           if(isProfileIdentityDirty()){ toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。"); return; }
+          var unlSelSrc = av.src || av.file || imgSrc || "";
           PLAYER.displayAvatarKey = av.key;
           PLAYER.avatarKey = av.key; PLAYER.avKey = av.key;
-          PLAYER.avatarSrc = av.src; PLAYER.avUrl = av.src;
-          document.getElementById("av-preview-img").src = av.src;
+          PLAYER.avatarSrc = unlSelSrc; PLAYER.avUrl = unlSelSrc;
+          document.getElementById("av-preview-img").src = unlSelSrc;
           localStorage.setItem("vtetris_displayAvatarKey", av.key);
+          // 同步 Firebase profile
+          ensureFirebaseReady().then(function(ok){
+            if(!ok || !firebaseDb || !PLAYER.playerKey) return;
+            firebaseDb.ref(DB_PATHS.players + "/" + PLAYER.playerKey + "/profile").update({
+              displayAvatarKey: av.key, avatarKey: av.key, updatedAt: Date.now()
+            });
+          });
           grid.querySelectorAll("img").forEach(function(i){ i.style.borderColor = ""; });
           img.style.borderColor = "var(--purple)";
         });
@@ -1166,12 +1185,76 @@ function hideAvGrid(){
 function goProfile(){
   loadPlayer();
   const firstRun=!localStorage.getItem("vtetris_firstRun");
-  if(player.name && !firstRun){ showDiffSelect(); return; }
+  if(PLAYER.id && PLAYER.id !== '玩家' && !firstRun){ showDiffSelect(); return; }
   localStorage.setItem("vtetris_firstRun","1");
-  buildAvGrid(); showScreen("s-profile");
+  // 不預設展開頭像 grid，只同步預覽
+  hideAvGrid();
+  var baseImg = document.getElementById("base-avatar-preview");
+  var dispImg = document.getElementById("av-preview-img");
+  var inp = document.getElementById("player-id-input");
+  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
+  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+  if(inp) inp.value = PLAYER.id;
+  showScreen("s-profile");
 }
 document.getElementById("btn-start").addEventListener("click", goProfile);
-document.getElementById("btn-profile-back").addEventListener("click",()=>showScreen("s-title"));
+document.getElementById("btn-profile-back").addEventListener("click",()=>{hideAvGrid();showScreen("s-title");});
+
+// ── 身份頭像按鈕 ──
+document.getElementById("btn-change-base-avatar").addEventListener("click", function(){
+  if(isProfileIdentityDirty()){
+    toast("你已變更玩家 ID。請先按「確認」完成身份切換，再變更身份頭像。");
+    return;
+  }
+  var wrap = document.getElementById("av-grid-wrap");
+  var titleEl = document.getElementById("av-grid-title");
+  if(wrap && wrap.style.display !== "none" && titleEl && titleEl.textContent.indexOf("身份") >= 0){
+    hideAvGrid();
+  } else {
+    buildAvGrid("base");
+  }
+});
+
+// ── 顯示頭像按鈕 ──
+document.getElementById("btn-change-display-avatar").addEventListener("click", function(){
+  if(isProfileIdentityDirty()){
+    toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。");
+    return;
+  }
+  var wrap = document.getElementById("av-grid-wrap");
+  var titleEl = document.getElementById("av-grid-title");
+  if(wrap && wrap.style.display !== "none" && titleEl && titleEl.textContent.indexOf("顯示") >= 0){
+    hideAvGrid();
+  } else {
+    // 先讀 Firebase 再 render
+    loadUnlockedAvatars().then(function(res){
+      unlockedAvatars = res || {};
+      buildAvGrid("display");
+    });
+  }
+});
+
+// ── 頭像收藏按鈕 ──
+document.getElementById("btn-unlock-collection").addEventListener("click", function(){
+  if(isProfileIdentityDirty()){
+    toast("你已變更玩家 ID。請先按「確認」完成身份切換，再查看頭像收藏。");
+    return;
+  }
+  var wrap = document.getElementById("av-grid-wrap");
+  if(wrap && wrap.style.display !== "none"){
+    hideAvGrid();
+  } else {
+    // 先讀 Firebase 再 render
+    loadUnlockedAvatars().then(function(res){
+      unlockedAvatars = res || {};
+      // 標題改為「頭像收藏」
+      var titleEl = document.getElementById("av-grid-title");
+      buildAvGrid("display");
+      if(titleEl) titleEl.textContent = "🏆 頭像收藏（已解鎖頭像）";
+    });
+  }
+});
+
 document.getElementById("btn-profile-ok").addEventListener("click",function(){
   var rawName = document.getElementById("player-id-input").value.trim();
   if(!rawName){ toast("請輸入你的名字！"); return; }
@@ -1658,7 +1741,7 @@ function showUnlockNotice(keys){
     var av = UNLOCKABLE_AVATARS.find(function(a){ return a.key===k; });
     if(av){
       var img = document.createElement('img');
-      img.src = av.src; img.style.cssText = 'width:64px;height:64px;border-radius:50%;border:3px solid #ffd166;';
+      img.src = av.src || av.file || ''; img.style.cssText = 'width:64px;height:64px;border-radius:50%;border:3px solid #ffd166;';
       avatarRow.appendChild(img);
     }
   });
@@ -1997,6 +2080,8 @@ async function loadLB(){
         name:v.name||"", avKey:v.avKey||"boy1",
         id:v.id||"", playerKey:v.playerKey||"",
         baseAvatarKey:v.baseAvatarKey||v.avKey||"boy1",
+        displayAvatarKey:v.displayAvatarKey||v.avatarKey||v.avKey||v.baseAvatarKey||"boy1",
+        avatarKey:v.avatarKey||v.displayAvatarKey||v.avKey||"boy1",
         score:v.score, level:v.level||1, lines:v.lines||0,
         difficulty:v.difficulty||"normal", ts:v.ts||0
       });
@@ -2007,6 +2092,8 @@ async function loadLB(){
         name:v.name||"", avKey:v.avKey||"boy1",
         id:v.id||"", playerKey:v.playerKey||"",
         baseAvatarKey:v.baseAvatarKey||v.avKey||"boy1",
+        displayAvatarKey:v.displayAvatarKey||v.avatarKey||v.avKey||v.baseAvatarKey||"boy1",
+        avatarKey:v.avatarKey||v.displayAvatarKey||v.avKey||"boy1",
         score:v.score, level:v.level||1, lines:v.lines||0,
         difficulty:v.difficulty||"normal", ts:v.ts||0
       });
@@ -2027,14 +2114,16 @@ async function loadLB(){
     if(!entries.length){$("lb-list").innerHTML="<div class=\"lb-msg\">還沒有紀錄！快來當第一名🎈</div>";return;}
     $("lb-list").innerHTML="";
     entries.forEach((e,i)=>{
-      const av=AVATARS.find(a=>a.key===(e.baseAvatarKey||e.avKey));
+      const displayKey=e.displayAvatarKey||e.avatarKey||e.avKey||e.baseAvatarKey||"boy1";
+      const av=getAvatarByKey(displayKey);
+      const avUrl=getAvatarUrl(displayKey);
       const rank=i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"";
       const mine=(e.playerKey && e.playerKey===PLAYER.playerKey) ||
                  (e.name===PLAYER.name && e.avKey===PLAYER.avKey);
       const dLabel={easy:"輕鬆",normal:"普通",hard:"挑戰"}[e.difficulty]||"";
       const row=document.createElement("div");
       row.className=`lb-row ${i<1?"r1":i<2?"r2":i<3?"r3":""} ${mine?"mine":""}`;
-      row.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av">${av?`<img src="${av.url}" alt="">`:""}</div><div class="lb-info"><div class="lb-name">${e.name}${mine?" ⭐":""}</div><div class="lb-meta">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""}</div></div><div class="lb-score">${(e.score||0).toLocaleString()}</div>`;
+      row.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av"><img src="${avUrl}" alt="" onerror="this.style.display='none'"></div><div class="lb-info"><div class="lb-name">${e.name}${mine?" ⭐":""}</div><div class="lb-meta">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""}</div></div><div class="lb-score">${(e.score||0).toLocaleString()}</div>`;
       $("lb-list").appendChild(row);
     });
   }catch(err){ console.error("LB Error:", err); $("lb-list").innerHTML="<div class=\"lb-msg\">載入失敗："+(err.message||String(err))+"</div>"; }
@@ -2044,7 +2133,16 @@ $("btn-lb").addEventListener("click",()=>{showScreen("s-lb");loadLB();});
 $("btn-lb-back").addEventListener("click",()=>showScreen("s-title"));
 $("btn-res-lb").addEventListener("click",()=>{showScreen("s-lb");loadLB();});
 $("btn-res-home").addEventListener("click",()=>showScreen("s-title"));
-$("btn-res-profile").addEventListener("click",()=>{ loadPlayer(); buildAvGrid(); showScreen("s-profile"); });
+$("btn-res-profile").addEventListener("click",()=>{ loadPlayer();
+  var baseImg = document.getElementById("base-avatar-preview");
+  var dispImg = document.getElementById("av-preview-img");
+  var inp = document.getElementById("player-id-input");
+  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
+  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+  if(inp) inp.value = PLAYER.id;
+  document.getElementById("profile-id-dirty-hint").style.display = "none";
+  hideAvGrid();
+  showScreen("s-profile"); });
 $("btn-replay").addEventListener("click",showDiffSelect);
 
 // ── BEST SCORE ──
@@ -2182,7 +2280,8 @@ function renderAdminList(){
   else if(adminSortMode==='score_desc') sorted.sort((a,b)=>b.score-a.score);
   else if(adminSortMode==='score_asc') sorted.sort((a,b)=>a.score-b.score);
   sorted.forEach((e,i)=>{
-    const av=AVATARS.find(a=>a.key===e.avKey);
+    const admDisplayKey=e.displayAvatarKey||e.avatarKey||e.avKey||e.baseAvatarKey||"boy1";
+    const admAvUrl=getAvatarUrl(admDisplayKey);
     const date=e.ts?new Date(e.ts).toLocaleDateString("zh-TW"):"";
     const dLabel={easy:"輕鬆",normal:"普通",hard:"挑戰"}[e.difficulty]||"";
     const row=document.createElement("div");
@@ -2190,7 +2289,7 @@ function renderAdminList(){
     row.innerHTML=`
       <div style="width:22px;text-align:center;font-family:'Fredoka One',cursive;font-size:14px;color:#9b7a8a;">${i+1}</div>
       <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e0f7ef;display:flex;align-items:center;justify-content:center;">
-        ${av?`<img src="${av.url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='🎈'">`:"🎈"}
+        <img src="${admAvUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.textContent='🎈'">
       </div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:12px;font-weight:800;color:#5a3a4a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.name||"?"}</div>
@@ -2289,10 +2388,16 @@ document.getElementById("btn-how").addEventListener("click",()=>{
   toast("← → 移動　↑ 旋轉　↓ 加速　空白 落下　Esc 暫停",4000);
 });
 document.getElementById("btn-change-profile").addEventListener("click",()=>{
-  loadPlayer(); buildAvGrid(); showScreen("s-profile");
-});
-document.getElementById("btn-change-profile").addEventListener("click",()=>{
-  loadPlayer(); buildAvGrid(); showScreen("s-profile");
+  loadPlayer();
+  var baseImg = document.getElementById("base-avatar-preview");
+  var dispImg = document.getElementById("av-preview-img");
+  var inp = document.getElementById("player-id-input");
+  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
+  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+  if(inp) inp.value = PLAYER.id;
+  document.getElementById("profile-id-dirty-hint").style.display = "none";
+  hideAvGrid();
+  showScreen("s-profile");
 });
 
 window.addEventListener("resize",()=>{
