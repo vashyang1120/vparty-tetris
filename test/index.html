@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-6</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-7</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -779,24 +779,34 @@ function ensurePlayerProfile() {
     return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').once('value').then(function(snap) {
       var profile = snap.val();
       if (!profile) {
-        // 建立新 profile
+        // 建立新 profile，用目前已驗證的 displayAvatarKey
+        // 若非內建頭像，保守使用 baseAvatarKey（因 unlockedAvatars 可能尚未讀取）
+        var safeDisp = isBuiltinAvatar(PLAYER.displayAvatarKey)
+          ? PLAYER.displayAvatarKey
+          : (PLAYER.baseAvatarKey || "boy1");
         var newProfile = {
           id: PLAYER.id,
           name: PLAYER.id,
           playerKey: pKey,
           baseAvatarKey: PLAYER.baseAvatarKey,
-          displayAvatarKey: PLAYER.displayAvatarKey,
-          avatarKey: PLAYER.avatarKey,
+          displayAvatarKey: safeDisp,
+          avatarKey: safeDisp,
           createdAt: Date.now(),
           updatedAt: Date.now()
         };
         return firebaseDb.ref(DB_PATHS.players + '/' + pKey + '/profile').set(newProfile);
       } else {
-        // 同步 displayAvatarKey（不改 baseAvatarKey / playerKey）
-        if (profile.displayAvatarKey && profile.displayAvatarKey !== PLAYER.displayAvatarKey) {
-          PLAYER.displayAvatarKey = profile.displayAvatarKey;
-          PLAYER.avatarKey = profile.displayAvatarKey;
-          PLAYER.avatarSrc = getAvatarByKey(profile.displayAvatarKey).src;
+        // 雲端 displayAvatarKey 必須先過 isDisplayAvatarAllowed 才可套用
+        var cloudDisplay = profile.displayAvatarKey || profile.avatarKey;
+        if (cloudDisplay && isDisplayAvatarAllowed(cloudDisplay)) {
+          PLAYER.displayAvatarKey = cloudDisplay;
+          PLAYER.avatarKey = cloudDisplay;
+          PLAYER.avKey = cloudDisplay;
+          PLAYER.avatarSrc = getAvatarUrl(cloudDisplay);
+          PLAYER.avUrl = PLAYER.avatarSrc;
+        } else {
+          // 雲端頭像不合法（未解鎖或不存在），使用本機驗證結果
+          validateDisplayAvatarForCurrentIdentity();
         }
       }
     });
@@ -1283,24 +1293,39 @@ document.getElementById("btn-profile-ok").addEventListener("click",function(){
       return;
     }
   }
+  // 更新身份
   PLAYER.id = newId; PLAYER.name = newId;
   PLAYER.playerKey = newPlayerKey;
-  var gname = document.getElementById("g-name");
-  if(gname) gname.textContent = PLAYER.id;
+  // 若是身份切換，先保守重設 displayAvatarKey 為 baseAvatarKey
+  if(isChangingIdentity){
+    PLAYER.displayAvatarKey = base;
+    PLAYER.avatarKey = base;
+    PLAYER.avKey = base;
+    PLAYER.avatarSrc = getAvatarUrl(base);
+    PLAYER.avUrl = PLAYER.avatarSrc;
+  }
   document.getElementById("profile-id-dirty-hint").style.display = "none";
+  // savePlayer 在 loadUnlockedAvatars 前，此時 displayAvatarKey 已是合法值
   savePlayer();
   loadUnlockedAvatars().then(function(res){
     unlockedAvatars = res || {};
+    // 驗證是否有更佳的雲端 displayAvatarKey（已解鎖的才會恢復）
     validateDisplayAvatarForCurrentIdentity();
+    // 更新所有頭像 UI
     var baseImg = document.getElementById("base-avatar-preview");
     var dispImg = document.getElementById("av-preview-img");
+    var gAv = document.getElementById("g-avatar");
     if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
     if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+    if(gAv) gAv.src = PLAYER.avatarSrc || getAvatarUrl(PLAYER.displayAvatarKey);
+    var gname = document.getElementById("g-name");
+    if(gname) gname.textContent = PLAYER.id;
     hideAvGrid();
     showDiffSelect("profile");
   });
 });
 
+// input dirty hint: 用 playerKey 判斷
 // input dirty hint: 用 playerKey 判斷
 document.getElementById("player-id-input").addEventListener("input", function(){
   var inputId = normalizePlayerId(this.value);
