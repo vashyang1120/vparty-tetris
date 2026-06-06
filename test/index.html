@@ -328,7 +328,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);
   background:rgba(26,10,46,.9);color:#fff;border-radius:var(--r-xl);
   padding:10px 20px;font-size:13px;font-weight:700;z-index:999;
-  transition:opacity .3s;opacity:0;pointer-events:none;white-space:nowrap;
+  white-space:pre-line;text-align:center;
+  transition:opacity .3s;opacity:0;pointer-events:none;
   border:1px solid rgba(255,133,161,.3)}
 #toast.show{opacity:1}
 .admin-lnk{position:fixed;bottom:4px;right:8px;font-size:9px;color:rgba(255,255,255,.12);cursor:pointer;z-index:100}
@@ -353,7 +354,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-7</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-9</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1169,7 +1170,10 @@ function buildAvGrid(mode){
       if(av.key === PLAYER.displayAvatarKey) img.style.borderColor = "var(--purple)";
       if(!isUnlocked){
         img.title = "🔒 " + av.name + " - " + (av.hint || "尚未解鎖");
-        img.addEventListener("click", function(){ toast("🔒 尚未解鎖：" + av.name); });
+        img.addEventListener("click", function(){
+          var condition = av.unlockText || av.hint || "尚未開放";
+          toast("🔒 " + av.name + " 尚未解鎖\n解鎖條件：" + condition, 4000);
+        });
       } else {
         img.title = av.name;
         img.addEventListener("click", function(){
@@ -1273,7 +1277,7 @@ document.getElementById("btn-unlock-collection").addEventListener("click", funct
       // 標題改為「頭像收藏」
       var titleEl = document.getElementById("av-grid-title");
       buildAvGrid("display");
-      if(titleEl) titleEl.textContent = "🏆 頭像收藏（已解鎖頭像）";
+      if(titleEl) titleEl.textContent = "🏆 頭像收藏";
     });
   }
 });
