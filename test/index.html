@@ -353,7 +353,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-4</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.4-avatar-test-5</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1052,6 +1052,7 @@ function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.add("off"));
   document.getElementById(id).classList.remove("off");
   const isGame = id==="s-game";
+  if(!isGame) clearGameVisualState();
   const isMobile = window.innerWidth < 900 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   document.getElementById("mob-ctrl").style.display = (isGame && isMobile)?"flex":"none";
   // Show fullscreen btn only on game screen
@@ -1259,27 +1260,41 @@ document.getElementById("btn-profile-ok").addEventListener("click",function(){
   var rawName = document.getElementById("player-id-input").value.trim();
   if(!rawName){ toast("請輸入你的名字！"); return; }
   var newId = normalizePlayerId(rawName);
-  var isChangingId = newId !== PLAYER.id && PLAYER.id !== '';
-  if(isChangingId){
+  var base = PLAYER.baseAvatarKey || "boy1";
+  var newPlayerKey = makePlayerKey(newId, base);
+  var isChangingIdentity = newPlayerKey !== PLAYER.playerKey;
+  if(isChangingIdentity){
     if(!confirm("⚠️ 更改玩家 ID 會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新 ID 重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？")){
       document.getElementById("player-id-input").value = PLAYER.id;
+      var hint = document.getElementById("profile-id-dirty-hint");
+      if(hint) hint.style.display = "none";
       return;
     }
   }
-  var base = PLAYER.baseAvatarKey || "boy1";
   PLAYER.id = newId; PLAYER.name = newId;
-  PLAYER.playerKey = makePlayerKey(newId, base);
+  PLAYER.playerKey = newPlayerKey;
   var gname = document.getElementById("g-name");
   if(gname) gname.textContent = PLAYER.id;
   document.getElementById("profile-id-dirty-hint").style.display = "none";
   hideAvGrid();
   savePlayer();
   loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; });
-  showDiffSelect();
+  showDiffSelect("profile");
+});
+
+// input dirty hint: 用 playerKey 判斷
+document.getElementById("player-id-input").addEventListener("input", function(){
+  var inputId = normalizePlayerId(this.value);
+  var inputKey = makePlayerKey(inputId, PLAYER.baseAvatarKey || "boy1");
+  var hint = document.getElementById("profile-id-dirty-hint");
+  if(hint) hint.style.display = (inputKey !== PLAYER.playerKey) ? "block" : "none";
 });
 
 // ── DIFFICULTY SELECT ──
-function showDiffSelect(){
+var diffBackTarget = "title";
+
+function showDiffSelect(backTarget){
+  diffBackTarget = backTarget || "title";
   showScreen("s-game");
   document.getElementById("g-overlay").classList.remove("off");
   document.getElementById("ov-title").textContent="🎈 選擇難度";
@@ -1298,7 +1313,18 @@ function showDiffSelect(){
   bBack.style.cssText="margin-top:8px;width:100%;max-width:240px;";
   bBack.addEventListener("click",()=>{
     document.getElementById("g-overlay").classList.add("off");
-    showScreen("s-title");
+    if(diffBackTarget === "profile"){
+      var baseImg = document.getElementById("base-avatar-preview");
+      var dispImg = document.getElementById("av-preview-img");
+      var inp = document.getElementById("player-id-input");
+      if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
+      if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
+      if(inp) inp.value = PLAYER.id;
+      hideAvGrid();
+      showScreen("s-profile");
+    } else {
+      showScreen("s-title");
+    }
   });
   row.appendChild(bBack);
 }
@@ -1697,6 +1723,16 @@ function showSticker(key){
   },700);
 }
 
+
+function clearGameVisualState(){
+  var danger = document.getElementById("danger-img");
+  if(danger){ danger.classList.remove("show"); danger.style.opacity = ""; }
+  var boardWrap = document.getElementById("board-wrap");
+  if(boardWrap) boardWrap.classList.remove("danger");
+  var sticker = document.getElementById("sticker-img");
+  if(sticker){ sticker.className = ""; sticker.src = ""; }
+}
+
 // danger
 function checkDanger(){
   let highest=ROWS;
@@ -1760,6 +1796,7 @@ function showUnlockNotice(keys){
 
 function gameOver(){
   running=false;
+  clearGameVisualState();
   sfx.gameOver();
   // ── 方塊遊戲自動解鎖 ──
   newlyUnlockedThisGame = [];
@@ -1822,7 +1859,7 @@ function togglePause(){
       musicWasPlayingBeforePause=false;
     });
     const b2=document.createElement("button"); b2.className="btn btn-outline"; b2.textContent="🏠 離開";
-    b2.addEventListener("click",()=>{running=false;if(raf)cancelAnimationFrame(raf);showScreen("s-title");});
+    b2.addEventListener("click",()=>{running=false;if(raf)cancelAnimationFrame(raf);clearGameVisualState();showScreen("s-title");});
     row.appendChild(b1); row.appendChild(b2);
   } else {
     // ESC 直接恢復（不經由按鈕）
