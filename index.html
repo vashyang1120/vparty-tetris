@@ -1024,14 +1024,17 @@ function makePlayerKey(id, baseAvatarKey) {
   return encodeFirebaseKeyPart(id) + '__' + (baseAvatarKey || 'boy1');
 }
 
-// resolveAvatarSrc：正式版在根目錄，assets/avatars/ 路徑直接使用
+// resolveAvatarSrc：所有 catalog/unlocked 相對路徑轉完整 GitHub Pages URL
+// 確保 iframe 嵌入 balloonv.com 時不破圖
 function resolveAvatarSrc(src) {
   if (!src) return "";
-  if (/^https?:\/\//.test(src)) return src; // 絕對 URL 不動
-  if (src.indexOf("../assets/avatars/") === 0) {
-    return src.slice(3); // 移除 test 版多出的 ../
-  }
-  return src; // 其餘路徑不動
+  var s = String(src);
+  if (/^https?:\/\//.test(s)) return s; // 已是完整 URL 不動
+  var base = "https://vashyang1120.github.io/vparty-rhythm-game/";
+  if (s.indexOf("../assets/avatars/") === 0) return base + s.slice(3);
+  if (s.indexOf("./assets/avatars/") === 0)  return base + s.slice(2);
+  if (s.indexOf("assets/avatars/") === 0)    return base + s;
+  return s;
 }
 
 function getAvatarByKey(key) {
