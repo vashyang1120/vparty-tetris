@@ -354,7 +354,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.6</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.7</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -706,14 +706,45 @@ var DB_PATHS = {
   legacyLeaderboard: 'tetris-balloon/leaderboard',
   gameLogs:          'gameLogs/tetris',
   leaderboards:      'leaderboards/tetris',
-  players:           'players'
+  players:           'players',
+  avatarCatalog:     'avatarCatalog'
 };
 var db = null;
 var firebaseDb = null;
 var firebaseAuthReady = false;
 var firebaseInitPromise = null;
-var unlockedAvatars = {};
-var newlyUnlockedThisGame = [];
+var unlockedAvatars = {}; // 已解鎖頭像
+var newlyUnlockedThisGame = []; // 本場新解鎖
+var AVATAR_CATALOG = {}; // Firebase avatarCatalog（學生/特殊頭像）
+// ── avatarCatalog：從 Firebase 讀取學生/特殊頭像 ──
+function loadAvatarCatalog() {
+  if (!FIREBASE_ENABLED) return Promise.resolve({});
+  return ensureFirebaseReady().then(function(ok) {
+    if (!ok || !firebaseDb) return {};
+    return firebaseDb.ref(DB_PATHS.avatarCatalog).once('value').then(function(snap) {
+      AVATAR_CATALOG = {};
+      if (snap.exists()) {
+        snap.forEach(function(child) {
+          var v = child.val();
+          if (!v) return;
+          // 略過 active === false 的 catalog 頭像
+          if (v.active === false) return;
+          if (v && v.key) {
+            AVATAR_CATALOG[v.key] = v;
+          } else {
+            AVATAR_CATALOG[child.key] = v;
+          }
+        });
+      }
+      console.log('[AvatarCatalog] Loaded', Object.keys(AVATAR_CATALOG).length, 'entries');
+      return AVATAR_CATALOG;
+    });
+  }).catch(function(e) {
+    console.warn('[AvatarCatalog] Load failed:', e.message);
+    return {};
+  });
+}
+
 function ensureFirebaseReady() {
   if (!FIREBASE_ENABLED) return Promise.resolve(false);
   if (firebaseAuthReady && db) return Promise.resolve(true);
@@ -993,13 +1024,40 @@ function makePlayerKey(id, baseAvatarKey) {
   return encodeFirebaseKeyPart(id) + '__' + (baseAvatarKey || 'boy1');
 }
 
+// resolveAvatarSrc：正式版在根目錄，assets/avatars/ 路徑直接使用
+function resolveAvatarSrc(src) {
+  if (!src) return "";
+  if (/^https?:\/\//.test(src)) return src; // 絕對 URL 不動
+  if (src.indexOf("../assets/avatars/") === 0) {
+    return src.slice(3); // 移除 test 版多出的 ../
+  }
+  return src; // 其餘路徑不動
+}
+
 function getAvatarByKey(key) {
+  if (!key) return { key: AVATARS[0].key, url: AVATARS[0].url, src: AVATARS[0].url, name: AVATARS[0].label };
+  // 1. 內建頭像
   var builtin = AVATARS.find(function(a){ return a.key === key; });
   if (builtin) return { key: builtin.key, url: builtin.url || builtin.src, src: builtin.url || builtin.src, name: builtin.label || builtin.key };
+  // 2. 固定解鎖頭像（UNLOCKABLE_AVATARS）
   var unlock = UNLOCKABLE_AVATARS.find(function(a){ return a.key === key; });
   if (unlock) {
-    var src = unlock.src || unlock.file;
-    return { key: unlock.key, url: src, src: src, name: unlock.name };
+    var uSrc = unlock.src || unlock.file;
+    return { key: unlock.key, url: uSrc, src: uSrc, name: unlock.name };
+  }
+  // 3. avatarCatalog（學生/特殊頭像）
+  if (AVATAR_CATALOG[key]) {
+    var cat = AVATAR_CATALOG[key];
+    var cSrc = resolveAvatarSrc(cat.src || cat.file || cat.url || '');
+    return { key: key, url: cSrc, src: cSrc, name: cat.name || key };
+  }
+  // 4. unlockedAvatars metadata fallback（已解鎖但 catalog 尚未載入）
+  if (unlockedAvatars[key]) {
+    var meta = unlockedAvatars[key];
+    var mSrc = resolveAvatarSrc(meta.src || meta.file || meta.url || '');
+    if (mSrc) {
+      return { key: key, url: mSrc, src: mSrc, name: meta.name || key };
+    }
   }
   return { key: AVATARS[0].key, url: AVATARS[0].url, src: AVATARS[0].url, name: AVATARS[0].label };
 }
@@ -1029,7 +1087,9 @@ function loadPlayer(){
   PLAYER.avUrl           = PLAYER.avatarSrc;
   PLAYER.playerKey       = makePlayerKey(PLAYER.id, baseAvatarKey);
 }
-function savePlayer(){
+// savePlayerLocal：只存 localStorage，不觸發 ensurePlayerProfile
+// 用於身份切換流程，避免 ensurePlayerProfile 在 loadAvatarCatalog/loadUnlockedAvatars 前先執行
+function savePlayerLocal(){
   var id   = normalizePlayerId(PLAYER.id || PLAYER.name);
   var base = PLAYER.baseAvatarKey || PLAYER.avKey || "boy1";
   var disp = PLAYER.displayAvatarKey || base;
@@ -1047,7 +1107,12 @@ function savePlayer(){
   localStorage.setItem("vtetris_playerKey",         pk);
   localStorage.setItem("vtetris_name",  id);
   localStorage.setItem("vtetris_avKey", base);
+}
 
+// savePlayer：存 localStorage + 同步 Firebase profile
+// 用於非身份切換的一般更新（如換顯示頭像）
+function savePlayer(){
+  savePlayerLocal();
   // 同步到 Firebase players 共用路徑
   ensurePlayerProfile();
 }
@@ -1144,8 +1209,10 @@ function buildAvGrid(mode){
         if(!confirm("⚠️ 更換身份頭像會切換玩家身份\n\n你的排行榜身份與解鎖頭像會依新身份重新讀取。\n新身份可能還沒有原本解鎖的頭像。\n\n是否繼續？")) return;
         PLAYER.baseAvatarKey = av.key;
         PLAYER.playerKey = makePlayerKey(PLAYER.id, av.key);
-        savePlayer();
-        loadUnlockedAvatars().then(function(res){
+        savePlayerLocal(); // 身份切換，不提前觸發 ensurePlayerProfile
+        loadAvatarCatalog().then(function(){
+          return loadUnlockedAvatars();
+        }).then(function(res){
           unlockedAvatars = res || {};
           validateDisplayAvatarForCurrentIdentity();
           var bImg = document.getElementById("base-avatar-preview");
@@ -1217,6 +1284,92 @@ function buildAvGrid(mode){
       }
       grid.appendChild(img);
     });
+
+    // ── catalog 頭像（學生/特殊：hiddenUntilUnlocked，已解鎖才顯示）──
+    Object.keys(AVATAR_CATALOG).forEach(function(key){
+      var cat = AVATAR_CATALOG[key];
+      if(!cat) return;
+      // hiddenUntilUnlocked 或 student：未解鎖不顯示
+      if(cat.hiddenUntilUnlocked || cat.tier === 'student'){
+        if(!(unlockedAvatars[key] && unlockedAvatars[key].unlocked)) return;
+      }
+      var catSrc = resolveAvatarSrc(cat.src || cat.file || cat.url || '');
+      var isUnlockedCat = unlockedAvatars[key] && unlockedAvatars[key].unlocked;
+      // 對方塊遊戲：catalog 頭像只顯示在顯示頭像模式
+      var imgCat = document.createElement("img");
+      imgCat.src = catSrc; imgCat.alt = cat.name || key;
+      imgCat.style.cssText = "width:56px;height:56px;border-radius:50%;cursor:" + (isUnlockedCat?"pointer":"not-allowed") + ";opacity:" + (isUnlockedCat?"1":"0.35") + ";border:3px solid " + (isUnlockedCat?"var(--mint)":"#ccc") + ";object-fit:cover;transition:all .15s;";
+      if(key === PLAYER.displayAvatarKey) imgCat.style.borderColor = "var(--purple)";
+      if(!isUnlockedCat){
+        imgCat.title = "🔒 " + (cat.name||key);
+        imgCat.addEventListener("click", function(){
+          var cond = cat.unlockText || cat.hint || '尚未開放';
+          toast("🔒 " + (cat.name||key) + " 尚未解鎖\n解鎖條件：" + cond, 4000);
+        });
+      } else {
+        imgCat.title = cat.name || key;
+        imgCat.addEventListener("click", function(){
+          if(mode === 'display' && isProfileIdentityDirty()){
+            toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。"); return;
+          }
+          var selCatSrc = catSrc;
+          PLAYER.displayAvatarKey = key; PLAYER.avatarKey = key; PLAYER.avKey = key;
+          PLAYER.avatarSrc = selCatSrc; PLAYER.avUrl = selCatSrc;
+          document.getElementById("av-preview-img").src = selCatSrc;
+          localStorage.setItem("vtetris_displayAvatarKey", key);
+          // 同步 Firebase profile
+          ensureFirebaseReady().then(function(ok){
+            if(!ok || !firebaseDb || !PLAYER.playerKey) return;
+            firebaseDb.ref(DB_PATHS.players + "/" + PLAYER.playerKey + "/profile").update({
+              displayAvatarKey: key, avatarKey: key, updatedAt: Date.now()
+            });
+          });
+          grid.querySelectorAll("img").forEach(function(i){ i.style.borderColor = ""; });
+          imgCat.style.borderColor = "var(--purple)";
+        });
+      }
+      grid.appendChild(imgCat);
+    });
+
+    // ── unknown unlocked metadata 頭像（不在任何清單，但 unlockedAvatars 有 metadata）──
+    if(mode === 'display'){
+      Object.keys(unlockedAvatars).forEach(function(key){
+        var uData = unlockedAvatars[key];
+        if(!uData || !uData.unlocked) return;
+        // 跳過已在 AVATARS / UNLOCKABLE_AVATARS / AVATAR_CATALOG 的 key
+        if(isBuiltinAvatar(key)) return;
+        if(UNLOCKABLE_AVATARS.some(function(a){ return a.key === key; })) return;
+        if(AVATAR_CATALOG[key]) return;
+        // 必須有 src / file / url / name 才算有效 metadata
+        var uMeta = uData.src || uData.file || uData.url;
+        if(!uMeta && !uData.name) return;
+        var uSrc = resolveAvatarSrc(uData.src || uData.file || uData.url || '');
+        var uName = uData.name || key;
+        var imgU = document.createElement("img");
+        imgU.src = uSrc; imgU.alt = uName;
+        imgU.style.cssText = "width:56px;height:56px;border-radius:50%;cursor:pointer;opacity:1;border:3px solid var(--mint);object-fit:cover;transition:all .15s;";
+        if(key === PLAYER.displayAvatarKey) imgU.style.borderColor = "var(--purple)";
+        imgU.title = uName;
+        imgU.addEventListener("click", function(){
+          if(isProfileIdentityDirty()){
+            toast("你已變更玩家 ID。請先按「確認」完成身份切換，再更換顯示頭像。"); return;
+          }
+          PLAYER.displayAvatarKey = key; PLAYER.avatarKey = key; PLAYER.avKey = key;
+          PLAYER.avatarSrc = uSrc; PLAYER.avUrl = uSrc;
+          document.getElementById("av-preview-img").src = uSrc;
+          localStorage.setItem("vtetris_displayAvatarKey", key);
+          ensureFirebaseReady().then(function(ok){
+            if(!ok || !firebaseDb || !PLAYER.playerKey) return;
+            firebaseDb.ref(DB_PATHS.players + "/" + PLAYER.playerKey + "/profile").update({
+              displayAvatarKey: key, avatarKey: key, updatedAt: Date.now()
+            });
+          });
+          grid.querySelectorAll("img").forEach(function(i){ i.style.borderColor = ""; });
+          imgU.style.borderColor = "var(--purple)";
+        });
+        grid.appendChild(imgU);
+      });
+    }
   }
 }
 
@@ -1274,7 +1427,9 @@ document.getElementById("btn-change-display-avatar").addEventListener("click", f
     hideAvGrid();
   } else {
     // 先讀 Firebase 再 render
-    loadUnlockedAvatars().then(function(res){
+    loadAvatarCatalog().then(function(){
+      return loadUnlockedAvatars();
+    }).then(function(res){
       unlockedAvatars = res || {};
       buildAvGrid("display");
     });
@@ -1291,8 +1446,10 @@ document.getElementById("btn-unlock-collection").addEventListener("click", funct
   if(wrap && wrap.style.display !== "none"){
     hideAvGrid();
   } else {
-    // 先讀 Firebase 再 render
-    loadUnlockedAvatars().then(function(res){
+    // 先讀 catalog + unlockedAvatars 再 render
+    loadAvatarCatalog().then(function(){
+      return loadUnlockedAvatars();
+    }).then(function(res){
       unlockedAvatars = res || {};
       // 標題改為「頭像收藏」
       var titleEl = document.getElementById("av-grid-title");
@@ -1336,9 +1493,14 @@ document.getElementById("btn-profile-ok").addEventListener("click",function(){
   PLAYER.avatarSrc = getAvatarUrl(newBase);
   PLAYER.avUrl = PLAYER.avatarSrc;
   document.getElementById("profile-id-dirty-hint").style.display = "none";
-  savePlayer();
-  loadUnlockedAvatars().then(function(res){
+  savePlayerLocal(); // 只存 localStorage，不提前觸發 ensurePlayerProfile
+  // 身份切換順序：loadAvatarCatalog → loadUnlockedAvatars → ensurePlayerProfile → validate
+  loadAvatarCatalog().then(function(){
+    return loadUnlockedAvatars();
+  }).then(function(res){
     unlockedAvatars = res || {};
+    return ensurePlayerProfile();
+  }).then(function(){
     validateDisplayAvatarForCurrentIdentity();
     var baseImg = document.getElementById("base-avatar-preview");
     var dispImg = document.getElementById("av-preview-img");
@@ -1803,8 +1965,13 @@ function isBuiltinAvatar(key) {
 
 function isDisplayAvatarAllowed(key) {
   if(!key) return false;
+  // 1. 內建頭像永遠允許
   if(isBuiltinAvatar(key)) return true;
-  return !!(unlockedAvatars[key] && unlockedAvatars[key].unlocked);
+  // 2. 固定解鎖頭像 / catalog 頭像：必須在 unlockedAvatars 裡有 unlocked:true
+  if(unlockedAvatars[key] && unlockedAvatars[key].unlocked) return true;
+  // 3. unknown unlocked avatar（有 file/name metadata 也允許）
+  if(unlockedAvatars[key] && (unlockedAvatars[key].src || unlockedAvatars[key].file || unlockedAvatars[key].name)) return true;
+  return false;
 }
 
 function validateDisplayAvatarForCurrentIdentity() {
@@ -2189,6 +2356,7 @@ async function saveLB(){
     baseAvatarKey:PLAYER.baseAvatarKey,
     displayAvatarKey:PLAYER.displayAvatarKey,
     avatarKey:PLAYER.avatarKey,
+    avatarSrc:resolveAvatarSrc(PLAYER.avatarSrc||getAvatarUrl(PLAYER.displayAvatarKey)),
     peakCombo:peakCombo||0
   };
   try{
@@ -2215,6 +2383,8 @@ async function saveLB(){
 async function loadLB(){
   $("lb-list").innerHTML="<div class=\"lb-msg\">🎈 載入中...</div>";
   try{
+    // 排行榜顯示前先載入 catalog，確保 catalog 頭像圖片可用
+    await loadAvatarCatalog();
     const ok = await ensureFirebaseReady();
     if(!ok){ $("lb-list").innerHTML="<div class=\"lb-msg\">Firebase 尚未登入成功，請稍後再試</div>"; return; }
 
@@ -2522,7 +2692,11 @@ window.addEventListener('resize', notifyParentHeight);
 setTimeout(notifyParentHeight, 500);
 
 initFirebase();
-ensureFirebaseReady().then(function(){ loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; }); });
+ensureFirebaseReady().then(function(){
+  return loadAvatarCatalog();
+}).then(function(){
+  loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; });
+});
 initBalloon();
 $("danger-img").src=IMG.danger;
 loadPlayer();
