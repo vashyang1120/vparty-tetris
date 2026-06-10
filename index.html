@@ -354,7 +354,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.7</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.1.8</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1252,7 +1252,7 @@ function buildAvGrid(mode){
   // 顯示頭像模式：加入已解鎖頭像
   if(mode === 'display'){
     UNLOCKABLE_AVATARS.forEach(function(av){
-      var isUnlocked = unlockedAvatars[av.key] && unlockedAvatars[av.key].unlocked;
+      var isUnlocked = isAvatarUnlocked(av.key);
       var imgSrc = av.src || av.file || "";
       var img = document.createElement("img");
       img.src = imgSrc; img.alt = av.name;
@@ -1292,12 +1292,13 @@ function buildAvGrid(mode){
     Object.keys(AVATAR_CATALOG).forEach(function(key){
       var cat = AVATAR_CATALOG[key];
       if(!cat) return;
-      // hiddenUntilUnlocked 或 student：未解鎖不顯示
-      if(cat.hiddenUntilUnlocked || cat.tier === 'student'){
-        if(!(unlockedAvatars[key] && unlockedAvatars[key].unlocked)) return;
-      }
+      // 學生 / 私人頭像：未解鎖時完全不顯示，不顯示鎖頭
+      // hiddenUntilUnlocked 一般特殊頭像：未解鎖可鎖住顯示；學生頭像例外，必須完全隱藏
+      var isPrivateStudent = isStudentOrPrivateAvatar(key, cat);
+      var isHiddenUntilUnlocked = isHiddenUntilUnlockedAvatar(key, cat);
+      var isUnlockedCat = isAvatarUnlocked(key);
+      if(isPrivateStudent && !isUnlockedCat) return;
       var catSrc = resolveAvatarSrc(cat.src || cat.file || cat.url || '');
-      var isUnlockedCat = unlockedAvatars[key] && unlockedAvatars[key].unlocked;
       // 對方塊遊戲：catalog 頭像只顯示在顯示頭像模式
       var imgCat = document.createElement("img");
       imgCat.src = catSrc; imgCat.alt = cat.name || key;
@@ -1338,7 +1339,7 @@ function buildAvGrid(mode){
     if(mode === 'display'){
       Object.keys(unlockedAvatars).forEach(function(key){
         var uData = unlockedAvatars[key];
-        if(!uData || !uData.unlocked) return;
+        if(!isAvatarUnlocked(key)) return;
         // 跳過已在 AVATARS / UNLOCKABLE_AVATARS / AVATAR_CATALOG 的 key
         if(isBuiltinAvatar(key)) return;
         if(UNLOCKABLE_AVATARS.some(function(a){ return a.key === key; })) return;
@@ -1966,14 +1967,41 @@ function isBuiltinAvatar(key) {
   return AVATARS.some(function(a){ return a.key === key; });
 }
 
+function isAvatarUnlocked(key) {
+  var data = unlockedAvatars && unlockedAvatars[key];
+  return data === true || (data && data.unlocked === true);
+}
+
+function isStudentOrPrivateAvatar(key, cat) {
+  key = String(key || '');
+  cat = cat || {};
+  return key.indexOf('student_') === 0 ||
+         key.indexOf('student-') === 0 ||
+         cat.type === 'student' ||
+         cat.category === 'student' ||
+         cat.group === 'student' ||
+         cat.tier === 'student' ||
+         cat.studentOnly === true ||
+         cat.private === true ||
+         !!cat.ownerPlayerKey ||
+         !!cat.exclusivePlayerKey;
+}
+
+function isHiddenUntilUnlockedAvatar(key, cat) {
+  cat = cat || {};
+  return cat.hiddenUntilUnlocked === true ||
+         cat.visibility === 'hiddenUntilUnlocked' ||
+         cat.unlockMode === 'hiddenUntilUnlocked';
+}
+
 function isDisplayAvatarAllowed(key) {
   if(!key) return false;
   // 1. 內建頭像永遠允許
   if(isBuiltinAvatar(key)) return true;
   // 2. 固定解鎖頭像 / catalog 頭像：必須在 unlockedAvatars 裡有 unlocked:true
-  if(unlockedAvatars[key] && unlockedAvatars[key].unlocked) return true;
+  if(isAvatarUnlocked(key)) return true;
   // 3. unknown unlocked avatar（有 file/name metadata 也允許）
-  if(unlockedAvatars[key] && (unlockedAvatars[key].src || unlockedAvatars[key].file || unlockedAvatars[key].name)) return true;
+  if(unlockedAvatars[key] && typeof unlockedAvatars[key] === "object" && (unlockedAvatars[key].src || unlockedAvatars[key].file || unlockedAvatars[key].name)) return true;
   return false;
 }
 
