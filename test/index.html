@@ -191,6 +191,45 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #res-vcoin-msg.success{background:#f0fff8;color:#2ab377;border-color:rgba(62,207,142,.35)}
 #res-vcoin-msg.already{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-lt)}
 #res-vcoin-msg.error,#res-vcoin-msg.offline{background:#fff0f0;color:#ff6b6b;border-color:rgba(255,107,107,.35)}
+
+/* ── TOP PLAYER CARD / PROFILE META ── */
+.tetris-player-chip{
+  position:fixed;top:12px;right:58px;z-index:120;
+  display:flex;align-items:center;gap:10px;max-width:min(320px,calc(100vw - 82px));
+  background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+  border:1.5px solid rgba(255,182,215,.55);border-radius:22px;
+  box-shadow:0 6px 18px rgba(232,111,154,.14);
+  padding:8px 12px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,opacity .16s ease;
+}
+.tetris-player-chip:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(232,111,154,.22);border-color:var(--pink)}
+.tetris-player-chip:active{transform:scale(.98)}
+.tetris-player-chip:focus-visible{outline:3px solid rgba(255,133,161,.35);outline-offset:3px}
+.tetris-player-chip.off{display:none}
+#top-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;background:var(--pink-bg);border:3px solid #fff;box-shadow:0 0 0 2px var(--pink)}
+.top-player-info{display:flex;flex-direction:column;gap:2px;min-width:0;line-height:1.2}
+#top-name{font-size:13px;color:var(--text);font-weight:900;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#top-player-key,#top-player-title,#top-vcoin-balance{font-size:10px;color:var(--text2);font-weight:800;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.title-chip-inline{color:var(--purple)!important}
+.wallet-chip-inline{color:#d59a00!important}
+.profile-help{width:min(480px,94vw);background:#fff;border:1.5px solid rgba(255,182,215,.45);border-radius:20px;box-shadow:var(--shadow-sm);padding:12px 14px;margin:-4px 0 14px;font-size:12px;color:var(--text2);font-weight:700;line-height:1.6}
+.profile-status-grid{width:min(480px,94vw);display:grid;grid-template-columns:1fr;gap:8px;margin:0 0 14px}
+.identity-box,.profile-wallet-box,.profile-title-panel{background:#fff;border:1.5px solid var(--pink-lt);border-radius:18px;box-shadow:var(--shadow-sm);padding:11px 14px}
+.identity-box>div,.profile-wallet-box span,.profile-title-current span{display:block;font-size:11px;color:var(--text2);font-weight:900;letter-spacing:.06em;margin-bottom:4px}
+.identity-box strong,.profile-wallet-box strong,.profile-title-current strong{font-size:15px;color:var(--pink2);font-weight:900}
+.identity-box code{display:block;margin-top:4px;font-size:10px;line-height:1.4;color:var(--text2);word-break:break-all;background:var(--pink-bg);border-radius:10px;padding:6px 8px}
+.profile-wallet-box strong{font-family:'Fredoka One',cursive;color:#d59a00;font-size:20px}
+.profile-title-current strong{color:var(--purple)}
+@media(max-width:720px){
+  .tetris-player-chip{top:8px;right:54px;max-width:calc(100vw - 70px);padding:6px 9px;border-radius:18px}
+  #top-avatar{width:38px;height:38px}
+  #top-name{font-size:12px;max-width:170px}
+  #top-player-key,#top-player-title,#top-vcoin-balance{font-size:9px;max-width:170px}
+}
+@media(max-width:420px){
+  #top-player-title{display:none}
+  .tetris-player-chip{max-width:calc(100vw - 64px)}
+}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ── LEADERBOARD ── */
@@ -356,11 +395,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <body>
 <div id="root">
 
+<!-- TOP PLAYER CARD -->
+<div id="top-player-card" class="player-chip tetris-player-chip" role="button" tabindex="0" title="開啟玩家設定">
+  <img id="top-avatar" alt="玩家頭像">
+  <div class="top-player-info">
+    <strong id="top-name">玩家</strong>
+    <span id="top-player-key">身份：尚未設定</span>
+    <span id="top-player-title" class="title-chip-inline">稱號：未裝備</span>
+    <span id="top-vcoin-balance" class="wallet-chip-inline">🪙 V幣：—</span>
+  </div>
+</div>
+
 <!-- TITLE -->
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.2.0-vcoin-foundation-test-1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.2.1-player-card-profile-ui-test-1</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -382,6 +432,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <!-- PROFILE -->
 <div id="s-profile" class="screen off" style="overflow-y:auto;justify-content:flex-start;padding:16px;">
   <h2 style="margin:12px 0 16px;font-size:20px;">✨ 玩家設定</h2>
+  <div class="profile-help">ID + 身份頭像就像遊戲身分證，會決定成績、解鎖和排行榜歸在哪一個玩家身上；只要更換 ID 或身份頭像，就會變成另一個玩家身份。顯示頭像只是外觀造型，不會影響成績。</div>
 
   <!-- ID 輸入 -->
   <div style="width:min(480px,94vw);margin-bottom:12px;">
@@ -397,21 +448,40 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <div style="flex:1;min-width:180px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;text-align:center;box-shadow:var(--shadow-sm);">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px;">🔑 身份頭像</div>
       <img id="base-avatar-preview" src="" alt="" style="width:64px;height:64px;border-radius:50%;border:3px solid var(--pink);object-fit:cover;margin:0 auto 6px;display:block;">
-      <div style="font-size:10px;color:var(--text2);line-height:1.4;margin-bottom:8px;">決定玩家身份與解鎖進度</div>
+      <div style="font-size:10px;color:var(--text2);line-height:1.4;margin-bottom:8px;">遊戲身分證：ID + 身份頭像決定成績與解鎖歸屬</div>
       <button class="btn btn-outline btn-sm" id="btn-change-base-avatar">變更身份頭像</button>
     </div>
     <!-- 顯示頭像 -->
     <div style="flex:1;min-width:180px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;text-align:center;box-shadow:var(--shadow-sm);">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px;">🎨 顯示頭像</div>
       <img id="av-preview-img" src="" alt="" style="width:64px;height:64px;border-radius:50%;border:3px solid var(--purple);object-fit:cover;margin:0 auto 6px;display:block;">
-      <div style="font-size:10px;color:var(--text2);line-height:1.4;margin-bottom:8px;">只影響外觀與排行榜顯示</div>
+      <div style="font-size:10px;color:var(--text2);line-height:1.4;margin-bottom:8px;">外觀造型：只改畫面顯示</div>
       <button class="btn btn-outline btn-sm" id="btn-change-display-avatar">變更顯示頭像</button>
+    </div>
+  </div>
+
+  <!-- 目前玩家狀態 -->
+  <div class="profile-status-grid">
+    <div class="identity-box">
+      <div>目前遊戲身份：</div>
+      <strong id="profile-identity-label">身份：—</strong>
+      <code id="profile-player-key">—</code>
+    </div>
+    <div class="profile-wallet-box">
+      <span>🪙 目前 V幣</span>
+      <strong id="profile-vcoin-balance">—</strong>
+    </div>
+    <div class="profile-title-panel">
+      <div class="profile-title-current">
+        <span>🎖 目前稱號</span>
+        <strong id="profile-equipped-title">未裝備</strong>
+      </div>
     </div>
   </div>
 
   <!-- 按鈕列 -->
   <div style="width:min(480px,94vw);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-    <button class="btn btn-p" id="btn-profile-ok">🎈 確認出發！</button>
+    <button class="btn btn-p" id="btn-profile-ok">🎈 確認身份</button>
     <button class="btn btn-outline btn-sm" id="btn-unlock-collection">🏆 頭像收藏</button>
     <button class="btn btn-outline btn-sm" id="btn-profile-back">← 返回</button>
   </div>
@@ -1000,6 +1070,8 @@ var PLAYER = {
 var player = PLAYER;
 var profileOriginalId = "";
 var profileOriginalBaseAvatarKey = "";
+var playerWalletBalance = null;
+var playerEquippedTitleName = "未裝備";
 
 function getLeaderboardIdentityKey(e) {
   var id = normalizePlayerId(e.id || e.name || "");
@@ -1127,6 +1199,184 @@ function savePlayer(){
   ensurePlayerProfile();
 }
 
+// ── PLAYER META UI（右上角色卡 / 玩家設定頁狀態） ──
+function getBaseAvatarDisplayName(baseAvatarKey){
+  var key = baseAvatarKey || (PLAYER && PLAYER.baseAvatarKey) || 'boy1';
+  var av = (AVATARS || []).find(function(a){ return a.key === key; });
+  if(av && av.label) return av.label;
+  var unlockAv = (UNLOCKABLE_AVATARS || []).find(function(a){ return a.key === key; });
+  if(unlockAv && unlockAv.name) return unlockAv.name;
+  if(AVATAR_CATALOG && AVATAR_CATALOG[key] && AVATAR_CATALOG[key].name) return AVATAR_CATALOG[key].name;
+  return key;
+}
+
+function getCurrentDisplayAvatarKey(){
+  return (PLAYER && (PLAYER.displayAvatarKey || PLAYER.avatarKey || PLAYER.baseAvatarKey)) || 'boy1';
+}
+
+function getWalletDisplayText(){
+  if(playerWalletBalance === null || typeof playerWalletBalance === 'undefined') return '—';
+  var n = Number(playerWalletBalance);
+  if(!isFinite(n)) n = 0;
+  return String(n);
+}
+
+function updateTopPlayerCard(){
+  var card = document.getElementById('top-player-card');
+  if(!card || !PLAYER) return;
+  var avatarKey = getCurrentDisplayAvatarKey();
+  var avatarUrl = resolveAvatarSrc(getAvatarUrl(avatarKey));
+  var topAvatar = document.getElementById('top-avatar');
+  var topName = document.getElementById('top-name');
+  var topKey = document.getElementById('top-player-key');
+  var topTitle = document.getElementById('top-player-title');
+  var topWallet = document.getElementById('top-vcoin-balance');
+  var id = PLAYER.id || PLAYER.name || '玩家';
+  var baseName = getBaseAvatarDisplayName(PLAYER.baseAvatarKey || 'boy1');
+  if(topAvatar) topAvatar.src = avatarUrl;
+  if(topName) topName.textContent = id;
+  if(topKey) topKey.textContent = '身份：' + id + ' + ' + baseName;
+  if(topTitle) topTitle.textContent = '稱號：' + (playerEquippedTitleName || '未裝備');
+  if(topWallet) topWallet.textContent = '🪙 V幣：' + getWalletDisplayText();
+}
+
+function updateProfileIdentityBox(){
+  var label = document.getElementById('profile-identity-label');
+  var keyEl = document.getElementById('profile-player-key');
+  if(!PLAYER) return;
+  var id = PLAYER.id || PLAYER.name || '玩家';
+  var baseName = getBaseAvatarDisplayName(PLAYER.baseAvatarKey || 'boy1');
+  if(label) label.textContent = '身份：' + id + ' + ' + baseName;
+  if(keyEl) keyEl.textContent = PLAYER.playerKey || makePlayerKey(id, PLAYER.baseAvatarKey || 'boy1');
+}
+
+function updateProfileWalletBox(){
+  var el = document.getElementById('profile-vcoin-balance');
+  if(el) el.textContent = getWalletDisplayText();
+}
+
+function updateProfileTitleBox(){
+  var el = document.getElementById('profile-equipped-title');
+  if(el) el.textContent = playerEquippedTitleName || '未裝備';
+}
+
+function loadPlayerWalletBalance(){
+  var playerKey = PLAYER && PLAYER.playerKey;
+  if(!playerKey){
+    playerWalletBalance = 0;
+    updateTopPlayerCard();
+    updateProfileWalletBox();
+    return Promise.resolve(0);
+  }
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb){
+      if(playerWalletBalance === null) playerWalletBalance = 0;
+      updateTopPlayerCard();
+      updateProfileWalletBox();
+      return playerWalletBalance;
+    }
+    return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/wallet/balance').once('value').then(function(snap){
+      var val = snap.val();
+      var n = Number(val);
+      playerWalletBalance = isFinite(n) ? n : 0;
+      updateTopPlayerCard();
+      updateProfileWalletBox();
+      return playerWalletBalance;
+    });
+  }).catch(function(e){
+    console.warn('[PlayerMeta] wallet load failed:', e.message);
+    if(playerWalletBalance === null) playerWalletBalance = 0;
+    updateTopPlayerCard();
+    updateProfileWalletBox();
+    return playerWalletBalance;
+  });
+}
+
+function loadEquippedTitleForCurrentPlayer(){
+  var playerKey = PLAYER && PLAYER.playerKey;
+  if(!playerKey){
+    playerEquippedTitleName = '未裝備';
+    updateTopPlayerCard();
+    updateProfileTitleBox();
+    return Promise.resolve(playerEquippedTitleName);
+  }
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb){
+      playerEquippedTitleName = playerEquippedTitleName || '未裝備';
+      updateTopPlayerCard();
+      updateProfileTitleBox();
+      return playerEquippedTitleName;
+    }
+    return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/quizEquippedTitle').once('value').then(function(snap){
+      var val = snap.val();
+      playerEquippedTitleName = (val && val.name) ? val.name : '未裝備';
+      updateTopPlayerCard();
+      updateProfileTitleBox();
+      return playerEquippedTitleName;
+    });
+  }).catch(function(e){
+    console.warn('[PlayerMeta] title load failed:', e.message);
+    playerEquippedTitleName = playerEquippedTitleName || '未裝備';
+    updateTopPlayerCard();
+    updateProfileTitleBox();
+    return playerEquippedTitleName;
+  });
+}
+
+function refreshPlayerMetaUI(){
+  updateTopPlayerCard();
+  updateProfileIdentityBox();
+  updateProfileWalletBox();
+  updateProfileTitleBox();
+  return Promise.all([
+    loadPlayerWalletBalance(),
+    loadEquippedTitleForCurrentPlayer()
+  ]).then(function(){
+    updateTopPlayerCard();
+    updateProfileIdentityBox();
+    updateProfileWalletBox();
+    updateProfileTitleBox();
+  });
+}
+
+function updateTopPlayerCardVisibility(screenId){
+  var card = document.getElementById('top-player-card');
+  if(!card) return;
+  card.classList.toggle('off', screenId === 's-game');
+}
+
+function syncProfilePreviewUI(){
+  var baseImg = document.getElementById('base-avatar-preview');
+  var dispImg = document.getElementById('av-preview-img');
+  var inp = document.getElementById('player-id-input');
+  if(baseImg) baseImg.src = resolveAvatarSrc(getAvatarUrl(PLAYER.baseAvatarKey));
+  if(dispImg) dispImg.src = resolveAvatarSrc(getAvatarUrl(PLAYER.displayAvatarKey || PLAYER.avatarKey || PLAYER.baseAvatarKey));
+  if(inp) inp.value = PLAYER.id;
+  updateProfileIdentityBox();
+}
+
+function openProfileFromTopCard(){
+  loadPlayer();
+  profileOriginalId = PLAYER.id;
+  profileOriginalBaseAvatarKey = PLAYER.baseAvatarKey;
+  var hint = document.getElementById('profile-id-dirty-hint');
+  if(hint) hint.style.display = 'none';
+  hideAvGrid();
+  syncProfilePreviewUI();
+  showScreen('s-profile');
+  loadAvatarCatalog().then(function(){
+    return loadUnlockedAvatars();
+  }).then(function(res){
+    unlockedAvatars = res || {};
+    validateDisplayAvatarForCurrentIdentity();
+    syncProfilePreviewUI();
+    return refreshPlayerMetaUI();
+  }).catch(function(e){
+    console.warn('[PlayerMeta] open profile refresh failed:', e.message);
+    refreshPlayerMetaUI();
+  });
+}
+
 // ── TOAST ──
 let toastTmr;
 function toast(msg, dur=2500){
@@ -1146,6 +1396,8 @@ function showScreen(id){
   // Show fullscreen btn only on game screen
   const fsBtn = document.getElementById("fs-btn");
   fsBtn.classList.toggle("off", !isGame);
+  updateTopPlayerCardVisibility(id);
+  updateTopPlayerCard();
   // Music: only play during game, pause on other screens
   if(!isGame && mPlaying) pauseSong();
 }
@@ -1238,6 +1490,7 @@ function buildAvGrid(mode){
         var selSrc = av.url || av.src || av.file || imgSrc || '';
         PLAYER.avatarSrc = selSrc; PLAYER.avUrl = selSrc;
         document.getElementById("av-preview-img").src = selSrc;
+        refreshPlayerMetaUI();
         localStorage.setItem("vtetris_displayAvatarKey", av.key);
         localStorage.setItem("vtetris_playerKey", PLAYER.playerKey);
         // 同步 Firebase profile（只改 displayAvatarKey，不改 baseAvatarKey / playerKey）
@@ -1280,6 +1533,7 @@ function buildAvGrid(mode){
           PLAYER.avatarKey = av.key; PLAYER.avKey = av.key;
           PLAYER.avatarSrc = unlSelSrc; PLAYER.avUrl = unlSelSrc;
           document.getElementById("av-preview-img").src = unlSelSrc;
+          refreshPlayerMetaUI();
           localStorage.setItem("vtetris_displayAvatarKey", av.key);
           // 同步 Firebase profile
           ensureFirebaseReady().then(function(ok){
@@ -1327,6 +1581,7 @@ function buildAvGrid(mode){
           PLAYER.displayAvatarKey = key; PLAYER.avatarKey = key; PLAYER.avKey = key;
           PLAYER.avatarSrc = selCatSrc; PLAYER.avUrl = selCatSrc;
           document.getElementById("av-preview-img").src = selCatSrc;
+          refreshPlayerMetaUI();
           localStorage.setItem("vtetris_displayAvatarKey", key);
           // 同步 Firebase profile
           ensureFirebaseReady().then(function(ok){
@@ -1368,6 +1623,7 @@ function buildAvGrid(mode){
           PLAYER.displayAvatarKey = key; PLAYER.avatarKey = key; PLAYER.avKey = key;
           PLAYER.avatarSrc = uSrc; PLAYER.avUrl = uSrc;
           document.getElementById("av-preview-img").src = uSrc;
+          refreshPlayerMetaUI();
           localStorage.setItem("vtetris_displayAvatarKey", key);
           ensureFirebaseReady().then(function(ok){
             if(!ok || !firebaseDb || !PLAYER.playerKey) return;
@@ -1408,8 +1664,10 @@ function goProfile(){
     if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
     if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
     if(inp) inp.value = PLAYER.id;
+    refreshPlayerMetaUI();
   });
   showScreen("s-profile");
+  refreshPlayerMetaUI();
 }
 document.getElementById("btn-start").addEventListener("click", goProfile);
 document.getElementById("btn-profile-back").addEventListener("click",()=>{hideAvGrid();showScreen("s-title");});
@@ -1522,6 +1780,7 @@ document.getElementById("btn-profile-ok").addEventListener("click",function(){
     var gname = document.getElementById("g-name");
     if(gname) gname.textContent = PLAYER.id;
     hideAvGrid();
+    refreshPlayerMetaUI();
     showDiffSelect("profile");
   });
 });
@@ -2251,7 +2510,7 @@ function gameOver(){
   const isNew=score>prev;
   if(isNew){ localStorage.setItem("vtetris_best",score); updateBestDisp(); }
   saveLB();
-  claimDailyVCoinsForTetris();
+  claimDailyVCoinsForTetris().then(function(){ refreshPlayerMetaUI(); });
   setTimeout(()=>{
     $("res-score").textContent=score.toLocaleString();
     $("res-level").textContent=level;
@@ -2607,19 +2866,10 @@ async function loadLB(){
 }
 
 $("btn-lb").addEventListener("click",()=>{showScreen("s-lb");loadLB();});
-$("btn-lb-back").addEventListener("click",()=>showScreen("s-title"));
+$("btn-lb-back").addEventListener("click",()=>{ refreshPlayerMetaUI(); showScreen("s-title"); });
 $("btn-res-lb").addEventListener("click",()=>{showScreen("s-lb");loadLB();});
-$("btn-res-home").addEventListener("click",()=>showScreen("s-title"));
-$("btn-res-profile").addEventListener("click",()=>{ loadPlayer();
-  var baseImg = document.getElementById("base-avatar-preview");
-  var dispImg = document.getElementById("av-preview-img");
-  var inp = document.getElementById("player-id-input");
-  if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-  if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-  if(inp) inp.value = PLAYER.id;
-  document.getElementById("profile-id-dirty-hint").style.display = "none";
-  hideAvGrid();
-  showScreen("s-profile"); });
+$("btn-res-home").addEventListener("click",()=>{ refreshPlayerMetaUI(); showScreen("s-title"); });
+$("btn-res-profile").addEventListener("click", openProfileFromTopCard);
 $("btn-replay").addEventListener("click",showDiffSelect);
 
 // ── BEST SCORE ──
@@ -2850,7 +3100,11 @@ initFirebase();
 ensureFirebaseReady().then(function(){
   return loadAvatarCatalog();
 }).then(function(){
-  loadUnlockedAvatars().then(function(res){ unlockedAvatars = res || {}; });
+  loadUnlockedAvatars().then(function(res){
+    unlockedAvatars = res || {};
+    validateDisplayAvatarForCurrentIdentity();
+    refreshPlayerMetaUI();
+  });
 });
 initBalloon();
 $("danger-img").src=IMG.danger;
@@ -2862,31 +3116,24 @@ loadPlayer();
   if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
   if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
 })();
+refreshPlayerMetaUI();
 updateBestDisp();
 loadSongs();
 
 document.getElementById("btn-how").addEventListener("click",()=>{
   toast("← → 移動　↑ 旋轉　↓ 加速　空白 落下　Esc 暫停",4000);
 });
-document.getElementById("btn-change-profile").addEventListener("click",function(){
-  loadPlayer();
-  // 保存進入設定頁時的原始身份，供取消時還原
-  profileOriginalId = PLAYER.id;
-  profileOriginalBaseAvatarKey = PLAYER.baseAvatarKey;
-  hideAvGrid();
-  document.getElementById("profile-id-dirty-hint").style.display = "none";
-  showScreen("s-profile");
-  loadUnlockedAvatars().then(function(res){
-    unlockedAvatars = res || {};
-    validateDisplayAvatarForCurrentIdentity();
-    var baseImg = document.getElementById("base-avatar-preview");
-    var dispImg = document.getElementById("av-preview-img");
-    var inp = document.getElementById("player-id-input");
-    if(baseImg) baseImg.src = getAvatarUrl(PLAYER.baseAvatarKey);
-    if(dispImg) dispImg.src = getAvatarUrl(PLAYER.displayAvatarKey);
-    if(inp) inp.value = PLAYER.id;
+document.getElementById("btn-change-profile").addEventListener("click", openProfileFromTopCard);
+var topPlayerCard = document.getElementById("top-player-card");
+if(topPlayerCard){
+  topPlayerCard.addEventListener("click", openProfileFromTopCard);
+  topPlayerCard.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      openProfileFromTopCard();
+    }
   });
-});
+}
 
 window.addEventListener("resize",()=>{
   if($("s-game").classList.contains("off")) return;
