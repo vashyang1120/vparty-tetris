@@ -227,7 +227,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   #top-player-key,#top-player-title,#top-vcoin-balance{font-size:9px;max-width:170px}
 }
 @media(max-width:420px){
-  #top-player-title{display:none}
+  #top-player-title{display:block;max-width:150px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tetris-player-chip{max-width:calc(100vw - 64px)}
 }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -254,6 +254,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .lb-av img{width:100%;height:100%;object-fit:cover}
 .lb-info{flex:1;min-width:0}
 .lb-name{font-size:13px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-title{font-size:10px;color:var(--purple);font-weight:900;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-meta{font-size:10px;color:var(--text2);font-weight:600}
 .lb-score{font-family:'Fredoka One',cursive;font-size:18px;color:var(--pink2)}
 .lb-msg{text-align:center;color:var(--text2);font-size:13px;padding:20px}
@@ -410,7 +411,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.2.1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.2.2</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -2794,6 +2795,30 @@ async function saveLB(){
   }
 }
 
+
+async function loadLeaderboardTitles(entries){
+  if(!entries || !entries.length) return entries || [];
+  try{
+    const ok = await ensureFirebaseReady();
+    if(!ok || !firebaseDb) return entries;
+    await Promise.all(entries.map(async function(e){
+      e.equippedTitleName = "";
+      if(!e || !e.playerKey) return;
+      try{
+        const snap = await firebaseDb.ref(DB_PATHS.players + '/' + e.playerKey + '/quizEquippedTitle').get();
+        const title = snap.val();
+        if(title && title.name) e.equippedTitleName = String(title.name);
+      }catch(err){
+        console.warn('[LeaderboardTitle] load failed for', e && e.playerKey, err && err.message ? err.message : err);
+        e.equippedTitleName = "";
+      }
+    }));
+  }catch(err){
+    console.warn('[LeaderboardTitle] skipped:', err && err.message ? err.message : err);
+  }
+  return entries;
+}
+
 async function loadLB(){
   $("lb-list").innerHTML="<div class=\"lb-msg\">🎈 載入中...</div>";
   try{
@@ -2846,6 +2871,7 @@ async function loadLB(){
     let entries=Object.values(best);
     entries.sort((a,b)=>b.score-a.score);
     entries=entries.slice(0,30);
+    entries=await loadLeaderboardTitles(entries);
 
     if(!entries.length){$("lb-list").innerHTML="<div class=\"lb-msg\">還沒有紀錄！快來當第一名🎈</div>";return;}
     $("lb-list").innerHTML="";
@@ -2859,7 +2885,8 @@ async function loadLB(){
       const dLabel={easy:"輕鬆",normal:"普通",hard:"挑戰"}[e.difficulty]||"";
       const row=document.createElement("div");
       row.className=`lb-row ${i<1?"r1":i<2?"r2":i<3?"r3":""} ${mine?"mine":""}`;
-      row.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av"><img src="${avUrl}" alt="" onerror="this.style.display='none'"></div><div class="lb-info"><div class="lb-name">${e.name}${mine?" ⭐":""}</div><div class="lb-meta">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""}</div></div><div class="lb-score">${(e.score||0).toLocaleString()}</div>`;
+      const titleHtml=e.equippedTitleName?`<div class="lb-title">🎖 ${e.equippedTitleName}</div>`:"";
+      row.innerHTML=`<div class="lb-rank">${rank}</div><div class="lb-av"><img src="${avUrl}" alt="" onerror="this.style.display='none'"></div><div class="lb-info"><div class="lb-name">${e.name}${mine?" ⭐":""}</div>${titleHtml}<div class="lb-meta">LV${e.level||1} · ${e.lines||0}行 ${dLabel?"· "+dLabel:""}</div></div><div class="lb-score">${(e.score||0).toLocaleString()}</div>`;
       $("lb-list").appendChild(row);
     });
   }catch(err){ console.error("LB Error:", err); $("lb-list").innerHTML="<div class=\"lb-msg\">載入失敗："+(err.message||String(err))+"</div>"; }
