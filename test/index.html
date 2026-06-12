@@ -411,7 +411,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.2.2-title-display-ui-test-1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.0-tetris-title-system-test-1</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -794,6 +794,45 @@ var firebaseInitPromise = null;
 var unlockedAvatars = {}; // 已解鎖頭像
 var newlyUnlockedThisGame = []; // 本場新解鎖
 var AVATAR_CATALOG = {}; // Firebase avatarCatalog（學生/特殊頭像）
+
+// ── 方塊遊戲稱號第一版 ──
+var TETRIS_TITLES = {
+  tetris_first_clear: {
+    titleKey: "tetris_first_clear",
+    name: "初次堆疊者",
+    gameId: "tetris",
+    source: "first_clear",
+    conditionText: "完成方塊遊戲 1 場"
+  },
+  tetris_score_1000: {
+    titleKey: "tetris_score_1000",
+    name: "方塊新星",
+    gameId: "tetris",
+    source: "score_1000",
+    conditionText: "單場分數達 1000"
+  },
+  tetris_score_2000: {
+    titleKey: "tetris_score_2000",
+    name: "氣球堆疊師",
+    gameId: "tetris",
+    source: "score_2000",
+    conditionText: "單場分數達 2000"
+  },
+  tetris_peak_combo_3: {
+    titleKey: "tetris_peak_combo_3",
+    name: "連消高手",
+    gameId: "tetris",
+    source: "peak_combo_3",
+    conditionText: "單場最高連消達 3"
+  },
+  tetris_level_5: {
+    titleKey: "tetris_level_5",
+    name: "高塔建築師",
+    gameId: "tetris",
+    source: "level_5",
+    conditionText: "單場 Level 達 5"
+  }
+};
 // ── avatarCatalog：從 Firebase 讀取學生/特殊頭像 ──
 function loadAvatarCatalog() {
   if (!FIREBASE_ENABLED) return Promise.resolve({});
@@ -1308,12 +1347,22 @@ function loadEquippedTitleForCurrentPlayer(){
       updateProfileTitleBox();
       return playerEquippedTitleName;
     }
-    return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/quizEquippedTitle').once('value').then(function(snap){
-      var val = snap.val();
-      playerEquippedTitleName = (val && val.name) ? val.name : '未裝備';
-      updateTopPlayerCard();
-      updateProfileTitleBox();
-      return playerEquippedTitleName;
+    var basePath = DB_PATHS.players + '/' + playerKey;
+    return firebaseDb.ref(basePath + '/equippedTitle').once('value').then(function(equippedSnap){
+      var equipped = equippedSnap.val();
+      if(equipped && equipped.name){
+        playerEquippedTitleName = equipped.name;
+        updateTopPlayerCard();
+        updateProfileTitleBox();
+        return playerEquippedTitleName;
+      }
+      return firebaseDb.ref(basePath + '/quizEquippedTitle').once('value').then(function(quizSnap){
+        var quizTitle = quizSnap.val();
+        playerEquippedTitleName = (quizTitle && quizTitle.name) ? quizTitle.name : '未裝備';
+        updateTopPlayerCard();
+        updateProfileTitleBox();
+        return playerEquippedTitleName;
+      });
     });
   }).catch(function(e){
     console.warn('[PlayerMeta] title load failed:', e.message);
@@ -2376,6 +2425,133 @@ function showUnlockNotice(keys){
 
 
 // ── V幣 Foundation：品牌宇宙每日完成獎勵 ──
+
+function getTetrisTitleCatalog(){
+  return TETRIS_TITLES;
+}
+
+function checkTetrisTitleUnlocks(result){
+  result = result || {};
+  var keys = [];
+  keys.push('tetris_first_clear');
+  if(Number(result.score || 0) >= 1000) keys.push('tetris_score_1000');
+  if(Number(result.score || 0) >= 2000) keys.push('tetris_score_2000');
+  if(Number(result.peakCombo || 0) >= 3) keys.push('tetris_peak_combo_3');
+  if(Number(result.level || 0) >= 5) keys.push('tetris_level_5');
+  return keys;
+}
+
+function buildTetrisTitleResultSnapshot(result){
+  result = result || {};
+  return {
+    score: Number(result.score || 0),
+    level: Number(result.level || 1),
+    lines: Number(result.lines || 0),
+    peakCombo: Number(result.peakCombo || 0),
+    difficulty: result.difficulty || diff || 'normal'
+  };
+}
+
+function unlockTetrisTitle(titleKey, source, result){
+  var catalog = getTetrisTitleCatalog();
+  var title = catalog[titleKey];
+  var playerKey = PLAYER && PLAYER.playerKey;
+  if(!title || !playerKey) return Promise.resolve(null);
+
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb) return null;
+
+    var now = Date.now();
+    var resultSnapshot = buildTetrisTitleResultSnapshot(result);
+    var basePath = DB_PATHS.players + '/' + playerKey;
+    var titlePath = basePath + '/titles/tetris/' + titleKey;
+    var titleData = {
+      unlocked: true,
+      titleKey: title.titleKey,
+      name: title.name,
+      gameId: title.gameId,
+      source: source || title.source,
+      conditionText: title.conditionText,
+      unlockedAt: now,
+      result: resultSnapshot
+    };
+
+    return firebaseDb.ref(titlePath).transaction(function(current){
+      if(current && current.unlocked === true) return;
+      return titleData;
+    }).then(function(tx){
+      if(!tx || !tx.committed) return null;
+
+      var logData = {
+        type: 'title_unlock',
+        titleKey: title.titleKey,
+        name: title.name,
+        gameId: title.gameId,
+        source: source || title.source,
+        playerKey: playerKey,
+        id: PLAYER.id || PLAYER.name || '',
+        baseAvatarKey: PLAYER.baseAvatarKey || '',
+        displayAvatarKey: PLAYER.displayAvatarKey || PLAYER.avatarKey || PLAYER.baseAvatarKey || '',
+        createdAt: now,
+        result: resultSnapshot
+      };
+
+      var logPromise = firebaseDb.ref(basePath + '/titleLogs').push(logData).catch(function(e){
+        console.warn('[TetrisTitle] title log failed:', e && e.message ? e.message : e);
+      });
+
+      var equipData = {
+        titleKey: title.titleKey,
+        name: title.name,
+        gameId: title.gameId,
+        source: source || title.source,
+        originPath: 'titles/tetris/' + titleKey,
+        equippedAt: now
+      };
+
+      var equipPromise = firebaseDb.ref(basePath + '/equippedTitle').transaction(function(current){
+        if(current && current.name) return;
+        return equipData;
+      }).catch(function(e){
+        console.warn('[TetrisTitle] auto equip failed:', e && e.message ? e.message : e);
+      });
+
+      return Promise.all([logPromise, equipPromise]).then(function(){
+        return titleData;
+      });
+    });
+  }).catch(function(e){
+    console.warn('[TetrisTitle] unlock failed:', e && e.message ? e.message : e);
+    return null;
+  });
+}
+
+function checkAndUnlockTetrisTitles(result){
+  var keys = checkTetrisTitleUnlocks(result);
+  var unlocked = [];
+  var chain = Promise.resolve();
+  keys.forEach(function(key){
+    chain = chain.then(function(){
+      var title = TETRIS_TITLES[key];
+      return unlockTetrisTitle(key, title ? title.source : key, result).then(function(data){
+        if(data) unlocked.push(data);
+      }).catch(function(e){
+        console.warn('[TetrisTitle] check item failed:', key, e && e.message ? e.message : e);
+      });
+    });
+  });
+  return chain.then(function(){ return unlocked; }).catch(function(e){
+    console.warn('[TetrisTitle] check failed:', e && e.message ? e.message : e);
+    return unlocked;
+  });
+}
+
+function showTitleUnlockNotice(newTitles){
+  if(!newTitles || !newTitles.length) return;
+  var nameList = newTitles.map(function(t){ return '・' + (t.name || t.titleKey || '新稱號'); }).join('\n');
+  toast('🎖 解鎖新稱號！\n' + nameList, 4200);
+}
+
 function getTaiwanDateKey(){
   var parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Taipei',
@@ -2510,6 +2686,27 @@ function gameOver(){
   const prev=parseInt(localStorage.getItem("vtetris_best")||"0");
   const isNew=score>prev;
   if(isNew){ localStorage.setItem("vtetris_best",score); updateBestDisp(); }
+  var titleResult = {
+    score: score,
+    level: level,
+    lines: lines,
+    difficulty: diff,
+    peakCombo: peakCombo || 0
+  };
+  checkAndUnlockTetrisTitles(titleResult).then(function(newTitles){
+    if(newTitles && newTitles.length){
+      window._pendingTitleUnlockNotice = newTitles;
+      setTimeout(function(){
+        if(window._pendingTitleUnlockNotice && window._pendingTitleUnlockNotice.length){
+          showTitleUnlockNotice(window._pendingTitleUnlockNotice);
+          window._pendingTitleUnlockNotice = [];
+        }
+      }, 900);
+    }
+    refreshPlayerMetaUI();
+  }).catch(function(e){
+    console.warn('[TetrisTitle] gameOver title check failed:', e && e.message ? e.message : e);
+  });
   saveLB();
   claimDailyVCoinsForTetris().then(function(){ refreshPlayerMetaUI(); });
   setTimeout(()=>{
@@ -2805,9 +3002,16 @@ async function loadLeaderboardTitles(entries){
       e.equippedTitleName = "";
       if(!e || !e.playerKey) return;
       try{
-        const snap = await firebaseDb.ref(DB_PATHS.players + '/' + e.playerKey + '/quizEquippedTitle').get();
-        const title = snap.val();
-        if(title && title.name) e.equippedTitleName = String(title.name);
+        const basePath = DB_PATHS.players + '/' + e.playerKey;
+        const equippedSnap = await firebaseDb.ref(basePath + '/equippedTitle').get();
+        const equipped = equippedSnap.val();
+        if(equipped && equipped.name){
+          e.equippedTitleName = String(equipped.name);
+          return;
+        }
+        const quizSnap = await firebaseDb.ref(basePath + '/quizEquippedTitle').get();
+        const quizTitle = quizSnap.val();
+        if(quizTitle && quizTitle.name) e.equippedTitleName = String(quizTitle.name);
       }catch(err){
         console.warn('[LeaderboardTitle] load failed for', e && e.playerKey, err && err.message ? err.message : err);
         e.equippedTitleName = "";
