@@ -194,8 +194,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 
 /* ── TOP PLAYER CARD / PROFILE META ── */
 .tetris-player-chip{
-  position:fixed;top:12px;right:60px;z-index:120;
-  display:flex;align-items:center;gap:10px;max-width:min(300px,calc(100vw - 110px));
+  position:fixed;top:12px;right:12px;z-index:120;
+  display:flex;align-items:center;gap:10px;max-width:min(320px,calc(100vw - 68px));
   background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
   border:1.5px solid rgba(255,182,215,.55);border-radius:22px;
   box-shadow:0 6px 18px rgba(232,111,154,.14);
@@ -239,15 +239,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .title-equip-btn{padding:6px 14px;border-radius:999px;border:0;background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:900;cursor:pointer}
 .title-equip-btn:active{transform:scale(.96)}
 @media(max-width:720px){
-  #fs-btn{top:8px;right:8px;z-index:180}
-  .tetris-player-chip{top:8px;right:54px;max-width:calc(100vw - 104px);padding:6px 9px;border-radius:18px}
+  #fs-btn{top:8px;left:8px;right:auto;z-index:180}
+  .tetris-player-chip{top:8px;right:8px;max-width:calc(100vw - 62px);padding:6px 9px;border-radius:18px}
   #top-avatar{width:38px;height:38px}
   #top-name{font-size:12px;max-width:170px}
   #top-player-key,#top-player-title,#top-vcoin-balance{font-size:9px;max-width:170px}
 }
 @media(max-width:420px){
   #top-player-title{display:block;max-width:150px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .tetris-player-chip{right:52px;max-width:calc(100vw - 100px)}
+  .tetris-player-chip{right:8px;max-width:calc(100vw - 62px)}
 }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
@@ -401,7 +401,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 
 /* fullscreen btn */
 #fs-btn{
-  position:fixed;top:10px;right:10px;z-index:180;
+  position:fixed;top:10px;left:10px;right:auto;z-index:180;
   background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);
   border-radius:10px;color:#fff;font-size:18px;
   width:38px;height:38px;cursor:pointer;
@@ -430,7 +430,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.0-tetris-title-system-test-2</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.0-tetris-title-system-test-3</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1470,9 +1470,9 @@ function showScreen(id){
   if(!isGame) clearGameVisualState();
   const isMobile = window.innerWidth < 900 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   document.getElementById("mob-ctrl").style.display = (isGame && isMobile)?"flex":"none";
-  // Show fullscreen btn only on game screen
+  // Show fullscreen btn on normal player screens so fullscreen can always be exited
   const fsBtn = document.getElementById("fs-btn");
-  fsBtn.classList.toggle("off", !isGame);
+  fsBtn.classList.toggle("off", id==="s-admin");
   updateTopPlayerCardVisibility(id);
   updateTopPlayerCard();
   // Music: only play during game, pause on other screens
