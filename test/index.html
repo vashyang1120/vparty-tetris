@@ -92,7 +92,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 /* ── GAME SCREEN ── */
 #s-game{flex-direction:row;padding:0;align-items:stretch;justify-content:center;
   background:linear-gradient(135deg,#1a0a2e,#2d1b4e,#1a0a2e)}
-@media (pointer:coarse){#s-game{padding-bottom:0}}
+@media (pointer:coarse){#s-game{padding-bottom:170px}}
 #particle-canvas{position:absolute;inset:0;z-index:5;pointer-events:none}
 
 .side{width:clamp(88px,13vw,130px);flex-shrink:0;display:flex;flex-direction:column;
@@ -119,7 +119,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 
 /* board */
 #game-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;position:relative;z-index:10;padding:8px 0}
-@media(max-width:700px){#s-game{padding-bottom:0}}
+@media(max-width:700px){#s-game{padding-bottom:170px}}
 #board-wrap{position:relative;border-radius:16px;overflow:hidden;
   box-shadow:0 0 40px rgba(255,133,161,.3),0 0 80px rgba(199,125,255,.15);
   border:2px solid rgba(255,255,255,.15)}
@@ -586,60 +586,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   #vcoin-history-wrap,#title-grid-wrap{margin-bottom:150px}
   #vcoin-history-list{max-height:30vh}
 }
-
-
-/* v1.3.5-test-3: board layout uses actual mobile-control height */
-:root{--mobile-control-height:0px;--game-safe-gap:16px}
-#s-game{
-  height:100dvh;
-  max-height:100dvh;
-  overflow:hidden;
-  box-sizing:border-box;
-  padding-bottom:0!important;
-}
-#game-mid{
-  min-height:0;
-  max-height:calc(100dvh - var(--mobile-control-height) - var(--game-safe-gap));
-  box-sizing:border-box;
-}
-#board-wrap{
-  max-height:calc(100dvh - var(--mobile-control-height) - var(--game-safe-gap));
-}
-#board-canvas{
-  max-height:calc(100dvh - var(--mobile-control-height) - var(--game-safe-gap));
-}
-@media (pointer:coarse), (max-width:720px){
-  :root{--game-safe-gap:12px}
-}
-@media (pointer:coarse) and (max-width:720px){
-  #mob-ctrl{
-    min-height:0;
-    height:150px;
-    max-height:150px;
-    padding:8px 14px calc(10px + env(safe-area-inset-bottom));
-    box-sizing:border-box;
-  }
-  #mob-ctrl .mob-btn,
-  #mob-ctrl button{
-    min-width:0;
-  }
-}
-@media (pointer:coarse) and (max-height:760px){
-  #mob-ctrl{
-    height:140px;
-    max-height:140px;
-    padding-top:7px;
-    padding-bottom:calc(8px + env(safe-area-inset-bottom));
-  }
-}
-@media (pointer:coarse) and (max-height:680px){
-  #mob-ctrl{
-    height:128px;
-    max-height:128px;
-    padding-top:6px;
-    padding-bottom:calc(6px + env(safe-area-inset-bottom));
-  }
-}
 </style>
 </head>
 <body>
@@ -660,7 +606,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.5-tetris-daily-challenge-foundation-test-3</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.5-tetris-daily-challenge-foundation-test-4</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -2883,52 +2829,19 @@ function initCanvas(){
   bCanvas=$("board-canvas"); bCtx=bCanvas.getContext("2d");
   nCanvas=$("next-canvas");  nCtx=nCanvas.getContext("2d");
   pCanvas=$("particle-canvas"); pCtx=pCanvas.getContext("2d");
-
-  const mobCtrl = document.getElementById("mob-ctrl");
-  let mobCtrlH = 0;
-  if(mobCtrl){
-    const st = window.getComputedStyle(mobCtrl);
-    const visible = st.display !== "none" && st.visibility !== "hidden" && st.opacity !== "0";
-    if(visible){
-      const rect = mobCtrl.getBoundingClientRect();
-      mobCtrlH = Math.ceil(rect.height || 0);
-    }
-  }
-  document.documentElement.style.setProperty("--mobile-control-height", mobCtrlH + "px");
-
-  const vw = window.innerWidth || document.documentElement.clientWidth || 360;
-  const vh = window.innerHeight || document.documentElement.clientHeight || 640;
-  const sideW = Math.min(130, Math.max(88, vw * 0.13)) * 2;
-  const verticalGap = mobCtrlH > 0 ? 18 : 24;
-  const horizontalGap = 16;
-
-  const availableH = Math.max(220, vh - mobCtrlH);
-  const maxH = Math.max(220, availableH - verticalGap);
-  const maxW = Math.max(180, vw - sideW - horizontalGap);
-
+  const isMob = window.innerWidth < 900 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  // Mobile controls height: dpad is about 160px + padding
+  const mobCtrlH = isMob ? 170 : 0;
+  const sideW = Math.min(130, Math.max(88, window.innerWidth * 0.13)) * 2;
+  const maxH  = window.innerHeight - mobCtrlH - 16;
+  const maxW  = window.innerWidth - sideW - 16;
   CELL = Math.floor(Math.min(maxH / ROWS, maxW / COLS));
-  CELL = Math.max(16, Math.min(CELL, 38));
-
+  CELL = Math.max(18, Math.min(CELL, 38));
   bCanvas.width  = COLS * CELL;
   bCanvas.height = ROWS * CELL;
-  bCanvas.style.width = bCanvas.width + "px";
-  bCanvas.style.height = bCanvas.height + "px";
-
-  pCanvas.width  = vw;
-  pCanvas.height = vh;
-
-  const wrap = document.getElementById("board-wrap");
-  if(wrap){
-    wrap.style.width = bCanvas.width + "px";
-    wrap.style.height = bCanvas.height + "px";
-  }
+  pCanvas.width  = window.innerWidth;
+  pCanvas.height = window.innerHeight;
 }
-function resizeBoardSafe(){
-  if(!bCanvas) return;
-  initCanvas();
-  draw();
-}
-
 
 function randPiece(){
   const k=PKEYS[Math.floor(Math.random()*PKEYS.length)];
@@ -4740,17 +4653,7 @@ if(topPlayerCard){
 
 window.addEventListener("resize",()=>{
   if($("s-game").classList.contains("off")) return;
-  resizeBoardSafe();
-});
-window.addEventListener("orientationchange",function(){
-  setTimeout(function(){
-    if(!$("s-game").classList.contains("off")) resizeBoardSafe();
-  },250);
-});
-document.addEventListener("fullscreenchange",function(){
-  setTimeout(function(){
-    if(!$("s-game").classList.contains("off")) resizeBoardSafe();
-  },120);
+  initCanvas(); draw();
 });
 
 
