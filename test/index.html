@@ -305,6 +305,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 }
 .title-source{font-size:10px;color:var(--text2);font-weight:900;margin-top:3px}
 .title-status{font-size:10px;font-weight:900;margin-top:5px;color:var(--purple)}
+#vcoin-history-wrap{
+  width:min(480px,94vw);margin-top:12px;background:#fff;border-radius:20px;
+  border:1.5px solid var(--yellow);padding:14px;box-shadow:var(--shadow-sm);
+}
+#vcoin-history-title{font-size:13px;font-weight:900;color:#d59a00;margin-bottom:10px}
+#vcoin-history-summary{
+  background:#fff8e8;border:1.5px solid rgba(255,190,11,.35);border-radius:16px;
+  padding:10px 12px;color:#d59a00;font-weight:900;font-size:12px;margin-bottom:10px;
+}
+#vcoin-history-list{
+  display:flex;flex-direction:column;gap:8px;max-height:min(320px,42vh);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.vcoin-log-item{background:#fff;border:1.5px solid rgba(255,190,11,.28);border-radius:16px;padding:10px 12px}
+.vcoin-log-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.vcoin-log-source{font-size:12px;font-weight:900;color:var(--text)}
+.vcoin-log-amount{font-family:'Fredoka One',cursive;font-size:16px;color:#d59a00;white-space:nowrap}
+.vcoin-log-amount.negative{color:#e63946}
+.vcoin-log-meta{font-size:10px;color:var(--text2);font-weight:800;line-height:1.5;margin-top:4px}
+.vcoin-empty-msg{
+  color:var(--text2);font-size:12px;font-weight:800;text-align:center;line-height:1.6;
+  padding:18px 10px;background:var(--pink-bg);border-radius:16px;
+}
 #title-grid{display:flex;flex-direction:column;gap:8px}
 .title-item{
   background:#fff;border:1.5px solid var(--purple-lt);border-radius:16px;
@@ -510,6 +533,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #fs-btn:hover{filter:brightness(1.08);box-shadow:0 10px 26px rgba(155,93,229,.42),0 3px 10px rgba(232,111,154,.32);}
 #fs-btn:active{transform:scale(.95);}
 #fs-btn.off{display:none !important;}
+
+@media(max-width:420px){
+  .profile-floating-actions{gap:6px;padding:8px 10px}
+  .profile-floating-actions .btn{font-size:10px;padding:7px 8px}
+  .profile-floating-actions .btn-p{min-width:110px}
+}
 </style>
 </head>
 <body>
@@ -530,7 +559,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.3-shared-title-collection-foundation-test-1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-history-foundation-test-1</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -612,6 +641,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <button class="btn btn-p" id="btn-profile-ok">🎈 確認身份</button>
     <button class="btn btn-outline btn-sm" id="btn-unlock-collection">🏆 頭像收藏</button>
     <button class="btn btn-outline btn-sm" id="btn-title-collection">🎖 稱號收藏</button>
+    <button class="btn btn-outline btn-sm" id="btn-vcoin-history">🪙 V幣紀錄</button>
     <button class="btn btn-outline btn-sm" id="btn-profile-back">← 返回</button>
   </div>
   <!-- 頭像選擇 Grid（動態顯示）-->
@@ -624,6 +654,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   <div id="title-grid-wrap" style="display:none;">
     <div id="title-grid-title">🎖 稱號收藏</div>
     <div id="title-grid"></div>
+  </div>
+
+  <!-- V幣紀錄（動態顯示）-->
+  <div id="vcoin-history-wrap" style="display:none;">
+    <div id="vcoin-history-title">🪙 V幣紀錄</div>
+    <div id="vcoin-history-summary"></div>
+    <div id="vcoin-history-list"></div>
   </div>
   <div class="profile-save-note">設定會自動儲存，下次直接開始！</div>
 </div>
@@ -1549,6 +1586,7 @@ function openProfileFromTopCard(){
   if(hint) hint.style.display = 'none';
   hideAvGrid();
   hideTitleGrid();
+  closeVcoinHistory();
   setProfileDataCollapsed(false);
   syncProfilePreviewUI();
   showScreen('s-profile');
@@ -1638,8 +1676,12 @@ function isTitleGridVisible(){
   var wrap = document.getElementById('title-grid-wrap');
   return !!(wrap && wrap.style.display !== 'none' && wrap.style.display !== '');
 }
+function isVcoinHistoryVisible(){
+  var wrap = document.getElementById('vcoin-history-wrap');
+  return !!(wrap && wrap.style.display !== 'none');
+}
 function syncProfileDataCollapseByPanels(){
-  setProfileDataCollapsed(isAvGridVisible() || isTitleGridVisible());
+  setProfileDataCollapsed(isAvGridVisible() || isTitleGridVisible() || isVcoinHistoryVisible());
 }
 function scrollProfilePanelIntoView(el){
   if(!el) return;
@@ -1668,6 +1710,7 @@ function buildAvGrid(mode){
   var grid = document.getElementById("av-grid");
   if(!wrap || !grid) return;
   hideTitleGrid();
+  closeVcoinHistory();
 
   if(mode === 'base'){
     title.textContent = "🔑 選擇身份頭像（只限內建頭像）";
@@ -1890,6 +1933,7 @@ function goProfile(){
   profileOriginalBaseAvatarKey = PLAYER.baseAvatarKey;
   hideAvGrid();
   hideTitleGrid();
+  closeVcoinHistory();
   setProfileDataCollapsed(false);
   // 讀取最新解鎖資料並驗證 displayAvatarKey
   loadUnlockedAvatars().then(function(res){
@@ -1907,7 +1951,7 @@ function goProfile(){
   refreshPlayerMetaUI();
 }
 document.getElementById("btn-start").addEventListener("click", goProfile);
-document.getElementById("btn-profile-back").addEventListener("click",()=>{hideAvGrid();hideTitleGrid();showScreen("s-title");});
+document.getElementById("btn-profile-back").addEventListener("click",()=>{hideAvGrid();hideTitleGrid();closeVcoinHistory();showScreen("s-title");});
 document.getElementById("profile-data-toggle").addEventListener("click",function(){
   var card=document.getElementById("profile-data-card");
   setProfileDataCollapsed(!(card && card.classList.contains("collapsed")));
@@ -1949,6 +1993,7 @@ document.getElementById("btn-change-display-avatar").addEventListener("click", f
 // ── 頭像收藏按鈕 ──
 document.getElementById("btn-unlock-collection").addEventListener("click", function(){
   hideTitleGrid();
+  closeVcoinHistory();
   if(isProfileIdentityDirty()){
     toast("你已變更玩家 ID。請先按「確認」完成身份切換，再查看頭像收藏。");
     return;
@@ -1977,6 +2022,152 @@ document.getElementById("btn-title-collection").addEventListener("click", functi
   }
   toggleTitleCollection();
 });
+document.getElementById("btn-vcoin-history").addEventListener("click",toggleVcoinHistory);
+
+
+function escapeHtml(text){
+  return String(text == null ? '' : text).replace(/[&<>"']/g,function(ch){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+  });
+}
+function formatVcoinLogTime(log){
+  if(!log) return '時間未記錄';
+  var raw = log.ts || log.createdAt || log.date || '';
+  if(!raw) return '時間未記錄';
+  if(typeof raw === 'number'){
+    var d = new Date(raw);
+    if(!isNaN(d.getTime())) return d.toLocaleString('zh-TW',{hour12:false});
+  }
+  if(typeof raw === 'string'){
+    var n = Number(raw);
+    if(raw.length >= 10 && !isNaN(n)){
+      var d2 = new Date(n);
+      if(!isNaN(d2.getTime())) return d2.toLocaleString('zh-TW',{hour12:false});
+    }
+    return raw;
+  }
+  return '時間未記錄';
+}
+function getVcoinGameLabel(gameId){
+  var map = { tetris:'方塊遊戲', quiz:'問答遊戲', rhythm:'節奏遊戲', adventure:'冒險遊戲' };
+  return map[gameId] || 'V宇宙';
+}
+function getVcoinSourceLabel(log){
+  if(!log) return 'V幣異動';
+  var source = log.source || log.reason || '';
+  var map = {
+    daily_game_complete:'每日完成獎勵',
+    quiz_daily_challenge:'問答今日挑戰',
+    achievement:'成就獎勵',
+    tetris_daily_complete:'每日完成獎勵',
+    adventure_level_1_first_clear:'成就獎勵'
+  };
+  return map[source] || log.title || log.message || source || 'V幣異動';
+}
+function normalizeVcoinLog(raw, key){
+  raw = raw || {};
+  var amount = Number(raw.amount);
+  if(isNaN(amount)) amount = 0;
+  var tsNum = Number(raw.ts || raw.createdAt || 0);
+  if(isNaN(tsNum)) tsNum = 0;
+  return {
+    key: key || '',
+    amount: amount,
+    gameId: raw.gameId || raw.game || '',
+    gameLabel: getVcoinGameLabel(raw.gameId || raw.game || ''),
+    sourceLabel: getVcoinSourceLabel(raw),
+    timeText: formatVcoinLogTime(raw),
+    ts: tsNum,
+    balanceAfter: raw.balanceAfter
+  };
+}
+function loadVcoinHistory(playerKey){
+  playerKey = playerKey || (PLAYER && PLAYER.playerKey);
+  var empty = { balance:0, logs:[] };
+  if(!playerKey) return Promise.resolve(empty);
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb) return empty;
+    var walletRef = firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/wallet/balance');
+    var logsRef = firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/vCoinLogs');
+    var balancePromise = walletRef.once('value').then(function(snap){
+      var v = Number(snap.val() || 0);
+      return isNaN(v) ? 0 : v;
+    }).catch(function(e){
+      console.warn('[VCoins] wallet read failed:', e && e.message ? e.message : e);
+      return 0;
+    });
+    var logsPromise = logsRef.orderByChild('ts').limitToLast(20).once('value').then(function(snap){
+      var rows = [];
+      snap.forEach(function(child){ rows.push(normalizeVcoinLog(child.val() || {}, child.key)); });
+      rows.sort(function(a,b){ return (b.ts || 0) - (a.ts || 0); });
+      return rows.slice(0,20);
+    });
+    return Promise.all([balancePromise, logsPromise]).then(function(values){
+      return { balance: values[0], logs: values[1] || [] };
+    });
+  });
+}
+function renderVcoinHistory(data){
+  var summary = document.getElementById('vcoin-history-summary');
+  var list = document.getElementById('vcoin-history-list');
+  if(!summary || !list) return;
+  var balance = Number(data && data.balance);
+  if(isNaN(balance)) balance = 0;
+  summary.textContent = '目前餘額：' + balance + ' V幣';
+  var logs = (data && data.logs) || [];
+  if(!logs.length){
+    list.innerHTML = '<div class="vcoin-empty-msg">目前還沒有 V幣紀錄。<br>完成遊戲或挑戰後，這裡會顯示你的 V幣取得明細。</div>';
+    return;
+  }
+  list.innerHTML = logs.map(function(log){
+    var amount = Number(log.amount || 0);
+    var amountText = (amount > 0 ? '+' : '') + amount;
+    var amountClass = amount < 0 ? ' negative' : '';
+    var meta = escapeHtml(log.timeText || '時間未記錄') + '｜' + escapeHtml(log.sourceLabel || 'V幣異動');
+    if(log.balanceAfter !== undefined && log.balanceAfter !== null && log.balanceAfter !== ''){
+      meta += '｜餘額：' + escapeHtml(log.balanceAfter);
+    }
+    return '<div class="vcoin-log-item">' +
+      '<div class="vcoin-log-top">' +
+        '<div class="vcoin-log-source">' + escapeHtml(log.gameLabel || 'V宇宙') + '</div>' +
+        '<div class="vcoin-log-amount' + amountClass + '">' + escapeHtml(amountText) + '</div>' +
+      '</div>' +
+      '<div class="vcoin-log-meta">' + meta + '</div>' +
+    '</div>';
+  }).join('');
+}
+function openVcoinHistory(){
+  var wrap = document.getElementById('vcoin-history-wrap');
+  var summary = document.getElementById('vcoin-history-summary');
+  var list = document.getElementById('vcoin-history-list');
+  if(!wrap) return;
+  hideAvGrid();
+  hideTitleGrid();
+  wrap.style.display = 'block';
+  setProfileDataCollapsed(true);
+  scrollProfileDataCardIntoView();
+  if(summary) summary.textContent = '目前餘額：讀取中...';
+  if(list) list.innerHTML = '<div class="vcoin-empty-msg">🎈 載入 V幣紀錄中...</div>';
+  loadVcoinHistory(PLAYER && PLAYER.playerKey).then(function(data){
+    renderVcoinHistory(data);
+    refreshPlayerVCoins();
+  }).catch(function(e){
+    console.warn('[VCoins] history read failed:', e && e.message ? e.message : e);
+    if(summary) summary.textContent = '目前餘額：讀取失敗';
+    if(list) list.innerHTML = '<div class="vcoin-empty-msg">V幣紀錄暫時讀取失敗，請稍後再試。</div>';
+  });
+}
+function closeVcoinHistory(){
+  var wrap = document.getElementById('vcoin-history-wrap');
+  if(wrap) wrap.style.display = 'none';
+  syncProfileDataCollapseByPanels();
+}
+function toggleVcoinHistory(){
+  var wrap = document.getElementById('vcoin-history-wrap');
+  if(!wrap) return;
+  if(wrap.style.display === 'none' || !wrap.style.display) openVcoinHistory();
+  else closeVcoinHistory();
+}
 
 document.getElementById("btn-profile-ok").addEventListener("click",function(){
   var rawName = document.getElementById("player-id-input").value.trim();
@@ -2960,6 +3151,7 @@ function toggleTitleCollection(){
   var willShow = wrap.style.display === 'none' || !wrap.style.display;
   if(willShow){
     hideAvGrid();
+    closeVcoinHistory();
     wrap.style.display = 'block';
     setProfileDataCollapsed(true);
     scrollProfileDataCardIntoView();
