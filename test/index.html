@@ -433,7 +433,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.1-cloud-best-score-test-2</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.1-cloud-best-score-test-3</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -3288,13 +3288,19 @@ function renderBestScore(value){
 
 function updateBestDisp(){
   var localBest = getLocalBestScore();
-  renderBestScore(localBest);
-  if(!PLAYER || !PLAYER.playerKey) return Promise.resolve(localBest);
+  $("best-disp").textContent = "—";
+  if(!PLAYER || !PLAYER.playerKey){
+    renderBestScore(localBest);
+    return Promise.resolve(localBest);
+  }
 
   return ensureFirebaseReady().then(function(ok){
-    if(!ok || !firebaseDb) return localBest;
+    if(!ok || !firebaseDb){
+      renderBestScore(localBest);
+      return localBest;
+    }
 
-    var best = localBest;
+    var cloudBest = 0;
     var currentIdentityKey = getLeaderboardIdentityKey({
       id: PLAYER.id,
       name: PLAYER.name,
@@ -3308,7 +3314,7 @@ function updateBestDisp(){
     var modernPromise = firebaseDb.ref(DB_PATHS.leaderboards + '/' + PLAYER.playerKey).once('value').then(function(snap){
       var data = snap.val();
       var score = data && data.score ? parseInt(data.score, 10) || 0 : 0;
-      if(score > best) best = score;
+      if(score > cloudBest) cloudBest = score;
     });
 
     var legacyPromise = firebaseDb.ref(DB_PATHS.legacyLeaderboard).once('value').then(function(snap){
@@ -3317,20 +3323,22 @@ function updateBestDisp(){
         var identityKey = getLeaderboardIdentityKey(e);
         if(identityKey === currentIdentityKey){
           var score = parseInt(e.score || 0, 10) || 0;
-          if(score > best) best = score;
+          if(score > cloudBest) cloudBest = score;
         }
       });
     });
 
     return Promise.all([modernPromise, legacyPromise]).then(function(){
-      renderBestScore(best);
-      if(best > localBest) localStorage.setItem("vtetris_best", String(best));
-      return best;
+      renderBestScore(cloudBest);
+      if(cloudBest > 0) localStorage.setItem("vtetris_best_" + PLAYER.playerKey, String(cloudBest));
+      return cloudBest;
     });
   }).catch(function(e){
     console.warn('[BestScore] cloud best load failed:', e && e.message ? e.message : e);
-    renderBestScore(localBest);
-    return localBest;
+    var scopedLocal = parseInt(localStorage.getItem("vtetris_best_" + PLAYER.playerKey) || "0", 10) || 0;
+    var fallback = scopedLocal || localBest;
+    renderBestScore(fallback);
+    return fallback;
   });
 }
 
