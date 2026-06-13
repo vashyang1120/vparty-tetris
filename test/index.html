@@ -328,6 +328,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   color:var(--text2);font-size:12px;font-weight:800;text-align:center;line-height:1.6;
   padding:18px 10px;background:var(--pink-bg);border-radius:16px;
 }
+.vcoin-wallet-guide{
+  display:flex;flex-direction:column;gap:8px;
+}
+.vcoin-wallet-section-title{
+  font-size:12px;font-weight:900;color:#d59a00;margin:2px 0 4px;
+}
+.vcoin-earn-card{
+  background:#fff;border:1.5px solid rgba(255,190,11,.28);
+  border-radius:16px;padding:10px 12px;
+}
+.vcoin-earn-card strong{
+  display:block;font-size:12px;color:var(--text);font-weight:900;margin-bottom:4px;
+}
+.vcoin-earn-card span{
+  display:block;font-size:11px;color:var(--text2);font-weight:800;line-height:1.55;
+}
+.vcoin-wallet-coming{
+  color:var(--text2);font-size:12px;font-weight:900;text-align:center;
+  line-height:1.6;padding:12px 10px;background:var(--pink-bg);border-radius:16px;
+}
 #title-grid{display:flex;flex-direction:column;gap:8px}
 .title-item{
   background:#fff;border:1.5px solid var(--purple-lt);border-radius:16px;
@@ -562,7 +582,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-history-foundation-test-5</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-foundation-test-6</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -644,7 +664,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <button class="btn btn-p" id="btn-profile-ok">🎈 確認身份</button>
     <button class="btn btn-outline btn-sm" id="btn-unlock-collection">🏆 頭像收藏</button>
     <button class="btn btn-outline btn-sm" id="btn-title-collection">🎖 稱號收藏</button>
-    <button class="btn btn-outline btn-sm" id="btn-vcoin-history">🪙 V幣紀錄</button>
+    <button class="btn btn-outline btn-sm" id="btn-vcoin-history">🪙 V幣錢包</button>
     <button class="btn btn-outline btn-sm" id="btn-profile-back">← 返回</button>
   </div>
   <!-- 頭像選擇 Grid（動態顯示）-->
@@ -661,7 +681,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 
   <!-- V幣紀錄（動態顯示）-->
   <div id="vcoin-history-wrap" style="display:none;">
-    <div id="vcoin-history-title">🪙 V幣紀錄</div>
+    <div id="vcoin-history-title">🪙 V幣錢包</div>
     <div id="vcoin-history-summary"></div>
     <div id="vcoin-history-list"></div>
   </div>
@@ -2210,49 +2230,39 @@ function renderVcoinHistory(data){
   if(!summary || !list) return;
 
   data = data || {};
+  var fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
   var balance = Number(data.balance);
-  if(isNaN(balance)) balance = 0;
+  if(isNaN(balance) && fallbackBalance !== null) balance = fallbackBalance;
 
-  if(data.balanceError === true){
-    summary.textContent = '目前餘額：讀取失敗';
+  if(data.balanceError === true && fallbackBalance === null){
+    summary.textContent = '目前餘額：暫時無法取得';
   }else{
+    if(isNaN(balance)) balance = 0;
     setLastKnownVcoinBalance(balance);
     summary.textContent = '目前餘額：' + balance + ' V幣';
   }
 
-  if(data.logsError === true){
-    if(data.balanceError === true){
-      list.innerHTML = '<div class="vcoin-empty-msg">V幣紀錄暫時讀取失敗，請稍後再試。</div>';
-    }else{
-      list.innerHTML = '<div class="vcoin-empty-msg">V幣紀錄暫時讀取失敗，但目前餘額仍可正常顯示。</div>';
-    }
-    return;
-  }
-
-  var logs = Array.isArray(data.logs) ? data.logs : [];
-  if(!logs.length){
-    list.innerHTML = '<div class="vcoin-empty-msg">目前還沒有 V幣紀錄。<br>完成遊戲或挑戰後，這裡會顯示你的 V幣取得明細。</div>';
-    return;
-  }
-
-  list.innerHTML = logs.map(function(log){
-    log = log || {};
-    var amount = Number(log.amount || 0);
-    if(isNaN(amount)) amount = 0;
-    var amountText = (amount > 0 ? '+' : '') + amount;
-    var amountClass = amount < 0 ? ' negative' : '';
-    var meta = escapeHtml(log.timeText || '時間未記錄') + '｜' + escapeHtml(log.sourceLabel || 'V幣異動');
-    if(log.balanceAfter !== undefined && log.balanceAfter !== null && log.balanceAfter !== ''){
-      meta += '｜餘額：' + escapeHtml(log.balanceAfter);
-    }
-    return '<div class="vcoin-log-item">' +
-      '<div class="vcoin-log-top">' +
-        '<div class="vcoin-log-source">' + escapeHtml(log.gameLabel || 'V宇宙') + '</div>' +
-        '<div class="vcoin-log-amount' + amountClass + '">' + escapeHtml(amountText) + '</div>' +
+  list.innerHTML =
+    '<div class="vcoin-wallet-guide">' +
+      '<div class="vcoin-wallet-section-title">今日可賺 V幣：</div>' +
+      '<div class="vcoin-earn-card">' +
+        '<strong>🎮 每日遊玩獎勵</strong>' +
+        '<span>任一遊戲完成一次：+30 V幣<br>每日限領一次<br>這是跨遊戲共用獎勵，不是每款遊戲各 +30。</span>' +
       '</div>' +
-      '<div class="vcoin-log-meta">' + meta + '</div>' +
+      '<div class="vcoin-earn-card">' +
+        '<strong>📚 問答今日挑戰</strong>' +
+        '<span>完成指定年級與科目：+10 V幣<br>每日限領一次</span>' +
+      '</div>' +
+      '<div class="vcoin-earn-card">' +
+        '<strong>🧱 方塊今日挑戰</strong>' +
+        '<span>即將開放：完成每日指定方塊任務可獲得 +10 V幣<br>每日限領一次</span>' +
+      '</div>' +
+      '<div class="vcoin-earn-card">' +
+        '<strong>🎵 節奏今日挑戰</strong>' +
+        '<span>即將開放：完成每日指定歌曲或難度任務可獲得 +10 V幣<br>每日限領一次</span>' +
+      '</div>' +
+      '<div class="vcoin-wallet-coming">V幣明細未來開放，敬請期待。</div>' +
     '</div>';
-  }).join('');
 }
 function openVcoinHistory(){
   var wrap = document.getElementById('vcoin-history-wrap');
@@ -2267,18 +2277,26 @@ function openVcoinHistory(){
 
   var confirmedPlayerKey = PLAYER && PLAYER.playerKey;
   if(!confirmedPlayerKey){
-    if(summary) summary.textContent = '目前餘額：請先確認身份';
-    if(list) list.innerHTML = '<div class="vcoin-empty-msg">請先確認玩家身份後，再查看 V幣紀錄。</div>';
+    var fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
+    renderVcoinHistory({
+      balance: fallbackBalance !== null ? fallbackBalance : 0,
+      logs: [],
+      balanceError: fallbackBalance === null,
+      logsError: true,
+      balanceFromFallback: fallbackBalance !== null
+    });
+    if(summary && fallbackBalance === null) summary.textContent = '目前餘額：請先確認身份';
     return;
   }
 
   if(summary) summary.textContent = '目前餘額：讀取中...';
-  if(list) list.innerHTML = '<div class="vcoin-empty-msg">🎈 載入 V幣紀錄中...</div>';
+  if(list) list.innerHTML = '<div class="vcoin-empty-msg">🎈 載入 V幣錢包中...</div>';
+
   loadVcoinHistory(confirmedPlayerKey).then(function(data){
     renderVcoinHistory(data);
     refreshPlayerVCoins();
   }).catch(function(e){
-    console.warn('[VCoins] history unexpected read failed:', e && e.message ? e.message : e);
+    console.warn('[VCoins] wallet unexpected read failed:', e && e.message ? e.message : e);
     var fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
     renderVcoinHistory({
       balance: fallbackBalance !== null ? fallbackBalance : 0,
