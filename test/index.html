@@ -348,6 +348,30 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   color:var(--text2);font-size:12px;font-weight:900;text-align:center;
   line-height:1.6;padding:12px 10px;background:var(--pink-bg);border-radius:16px;
 }
+.vcoin-task-card{
+  background:#fff;border:1.5px solid rgba(255,190,11,.28);
+  border-radius:16px;padding:10px 12px;position:relative;
+}
+.vcoin-task-card.done{
+  background:#fffaf0;border-color:rgba(255,190,11,.45);opacity:.86;
+}
+.vcoin-task-title{
+  font-size:12px;color:var(--text);font-weight:900;margin-bottom:4px;
+}
+.vcoin-task-reward{
+  font-size:11px;color:#d59a00;font-weight:900;line-height:1.55;
+}
+.vcoin-task-note{
+  font-size:10px;color:var(--text2);font-weight:800;line-height:1.55;margin-top:4px;
+}
+.vcoin-task-status{
+  font-size:11px;font-weight:900;color:var(--purple);margin-top:6px;
+}
+.vcoin-task-card.done .vcoin-task-status{color:#2a9d8f}
+.vcoin-task-stamp{
+  display:inline-block;margin-top:6px;border-radius:999px;padding:4px 8px;
+  background:#fff8e8;color:#d59a00;font-size:10px;font-weight:900;
+}
 #title-grid{display:flex;flex-direction:column;gap:8px}
 .title-item{
   background:#fff;border:1.5px solid var(--purple-lt);border-radius:16px;
@@ -582,7 +606,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-foundation-test-6</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.5-tetris-daily-challenge-foundation-test-1</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -2224,6 +2248,339 @@ function loadVcoinHistory(playerKey){
     return makeUnavailableResult();
   });
 }
+
+function getTetrisDailyChallengeCatalog(){
+  return [
+    {
+      challengeKey: 'complete_game',
+      name: '完成一場方塊遊戲',
+      description: '完成一場遊戲，不論分數',
+      amount: 10,
+      conditionType: 'complete_game'
+    },
+    {
+      challengeKey: 'score_500',
+      name: '單場分數達 500',
+      description: '單場分數達 500',
+      amount: 10,
+      conditionType: 'score',
+      target: 500
+    },
+    {
+      challengeKey: 'clear_5_lines',
+      name: '單場消除 5 行',
+      description: '單場消除 5 行',
+      amount: 10,
+      conditionType: 'lines',
+      target: 5
+    },
+    {
+      challengeKey: 'reach_level_2',
+      name: '達到 Level 2',
+      description: '單場達到 Level 2',
+      amount: 10,
+      conditionType: 'level',
+      target: 2
+    },
+    {
+      challengeKey: 'combo_2',
+      name: '最高連消達 2',
+      description: '單場最高連消達 2',
+      amount: 10,
+      conditionType: 'maxCombo',
+      target: 2
+    }
+  ];
+}
+
+function getTetrisDailyChallengeForDate(yyyyMMdd){
+  var list = getTetrisDailyChallengeCatalog();
+  var n = Number(String(yyyyMMdd || '').slice(-2)) || 1;
+  return list[n % list.length] || list[0];
+}
+
+function isTetrisDailyChallengeCompleted(challenge, result){
+  challenge = challenge || {};
+  result = result || {};
+  var scoreVal = Number(result.score || 0);
+  var linesVal = Number(result.lines || 0);
+  var levelVal = Number(result.level || 0);
+  var comboVal = Number(result.maxCombo || result.peakCombo || 0);
+  if(challenge.conditionType === 'complete_game') return true;
+  if(challenge.conditionType === 'score') return scoreVal >= Number(challenge.target || 0);
+  if(challenge.conditionType === 'lines') return linesVal >= Number(challenge.target || 0);
+  if(challenge.conditionType === 'level') return levelVal >= Number(challenge.target || 0);
+  if(challenge.conditionType === 'maxCombo') return comboVal >= Number(challenge.target || 0);
+  return false;
+}
+
+function buildTetrisDailyChallengeResultSnapshot(result){
+  result = result || {};
+  return {
+    score: Number(result.score || 0),
+    lines: Number(result.lines || 0),
+    level: Number(result.level || 0),
+    maxCombo: Number(result.maxCombo || result.peakCombo || 0)
+  };
+}
+
+function claimTetrisDailyChallengeReward(result){
+  var playerKey = PLAYER && PLAYER.playerKey;
+  var yyyyMMdd = getTaiwanDateKey();
+  var challenge = getTetrisDailyChallengeForDate(yyyyMMdd);
+  var amount = Number(challenge.amount || 10);
+  var snapshotResult = buildTetrisDailyChallengeResultSnapshot(result);
+  var completed = isTetrisDailyChallengeCompleted(challenge, snapshotResult);
+
+  if(!playerKey){
+    return Promise.resolve({status:'error', challenge:challenge, amount:amount, balance:null});
+  }
+
+  if(!completed){
+    return Promise.resolve({
+      status:'not_completed',
+      challenge:challenge,
+      amount:amount,
+      balance:getCurrentDisplayedVcoinBalanceFallback(),
+      result:snapshotResult
+    });
+  }
+
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb){
+      return {status:'offline', challenge:challenge, amount:amount, balance:getCurrentDisplayedVcoinBalanceFallback(), result:snapshotResult};
+    }
+
+    var now = Date.now();
+    var playerRef = firebaseDb.ref(DB_PATHS.players + '/' + playerKey);
+    var logKey = firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/vCoinLogs').push().key;
+
+    return new Promise(function(resolve){
+      playerRef.transaction(function(player){
+        player = player || {};
+        player.dailyChallenges = player.dailyChallenges || {};
+        player.dailyChallenges.tetris = player.dailyChallenges.tetris || {};
+
+        if(player.dailyChallenges.tetris[yyyyMMdd] &&
+           player.dailyChallenges.tetris[yyyyMMdd].claimed === true){
+          return player;
+        }
+
+        player.wallet = player.wallet || {};
+        var currentBalance = Number(player.wallet.balance || 0);
+        if(!isFinite(currentBalance)) currentBalance = 0;
+        player.wallet.balance = currentBalance + amount;
+        player.wallet.updatedAt = now;
+
+        player.dailyChallenges.tetris[yyyyMMdd] = {
+          gameId: 'tetris',
+          challengeKey: challenge.challengeKey,
+          challengeName: challenge.name,
+          amount: amount,
+          claimed: true,
+          completedAt: now,
+          yyyyMMdd: yyyyMMdd,
+          result: snapshotResult
+        };
+
+        player.vCoinLogs = player.vCoinLogs || {};
+        player.vCoinLogs[logKey] = {
+          type: 'daily_challenge',
+          gameId: 'tetris',
+          source: 'tetris_daily_challenge',
+          challengeKey: challenge.challengeKey,
+          title: '方塊今日挑戰',
+          message: '完成方塊今日挑戰：' + challenge.name,
+          amount: amount,
+          ts: now,
+          yyyyMMdd: yyyyMMdd
+        };
+
+        return player;
+      }, function(error, committed, snapshot){
+        if(error){
+          console.warn('[TetrisDailyChallenge] transaction failed:', error.message);
+          resolve({status:'error', challenge:challenge, amount:amount, balance:getCurrentDisplayedVcoinBalanceFallback(), result:snapshotResult});
+          return;
+        }
+
+        var data = snapshot && snapshot.val ? (snapshot.val() || {}) : {};
+        var balance = data.wallet && isFinite(Number(data.wallet.balance)) ? Number(data.wallet.balance) : getCurrentDisplayedVcoinBalanceFallback();
+        if(balance !== null) setLastKnownVcoinBalance(balance);
+
+        var logCreated = !!(data.vCoinLogs && data.vCoinLogs[logKey]);
+        if(logCreated){
+          resolve({status:'claimed', challenge:challenge, amount:amount, balance:balance, result:snapshotResult});
+        }else{
+          resolve({status:'already', challenge:challenge, amount:amount, balance:balance, result:snapshotResult});
+        }
+      }, false);
+    });
+  }).catch(function(e){
+    console.warn('[TetrisDailyChallenge] claim failed:', e && e.message ? e.message : e);
+    return {status:'error', challenge:challenge, amount:amount, balance:getCurrentDisplayedVcoinBalanceFallback(), result:snapshotResult};
+  });
+}
+
+function buildVcoinRewardResultMessage(commonResult, challengeResult){
+  commonResult = commonResult || {};
+  challengeResult = challengeResult || {};
+  var parts = [];
+  var total = 0;
+
+  if(commonResult.status === 'claimed'){
+    parts.push('今日遊玩獎勵：+30 V幣');
+    total += 30;
+  }else if(commonResult.status === 'already'){
+    parts.push('今日遊玩獎勵已領取');
+  }else if(commonResult.status === 'offline' || commonResult.status === 'error'){
+    parts.push('今日遊玩獎勵暫時無法確認');
+  }
+
+  var challenge = challengeResult.challenge || getTetrisDailyChallengeForDate(getTaiwanDateKey());
+  var amount = Number(challengeResult.amount || (challenge && challenge.amount) || 10);
+  if(challengeResult.status === 'claimed'){
+    parts.push('方塊今日挑戰完成：+' + amount + ' V幣');
+    total += amount;
+  }else if(challengeResult.status === 'already'){
+    parts.push('方塊今日挑戰今日已完成');
+  }else if(challengeResult.status === 'not_completed'){
+    parts.push('方塊今日挑戰：' + (challenge.name || '今日任務') + '，尚未完成，再挑戰一次吧！');
+  }else if(challengeResult.status === 'offline' || challengeResult.status === 'error'){
+    parts.push('方塊今日挑戰暫時無法確認');
+  }
+
+  if(total > 0) parts.push('合計獲得：+' + total + ' V幣');
+  return {
+    text: parts.join('｜'),
+    type: total > 0 ? 'success' : 'already'
+  };
+}
+
+function runVcoinRewardsAfterGame(result){
+  return claimDailyVCoinsForTetris().then(function(commonResult){
+    return claimTetrisDailyChallengeReward(result).then(function(challengeResult){
+      var msg = buildVcoinRewardResultMessage(commonResult, challengeResult);
+      setResultVCoinMessage(msg.text, msg.type);
+      if((commonResult && commonResult.balance !== null && commonResult.balance !== undefined) ||
+         (challengeResult && challengeResult.balance !== null && challengeResult.balance !== undefined)){
+        var finalBalance = (challengeResult && challengeResult.balance !== null && challengeResult.balance !== undefined)
+          ? challengeResult.balance
+          : commonResult.balance;
+        setLastKnownVcoinBalance(finalBalance);
+      }
+      refreshPlayerMetaUI();
+      return {common:commonResult, challenge:challengeResult};
+    });
+  }).catch(function(e){
+    console.warn('[VCoins] reward sequence failed:', e && e.message ? e.message : e);
+    setResultVCoinMessage('⚠️ V幣暫時無法確認，排行榜已正常紀錄', 'error');
+    refreshPlayerMetaUI();
+    return null;
+  });
+}
+
+function loadVcoinWalletStatus(playerKey){
+  playerKey = playerKey || (PLAYER && PLAYER.playerKey);
+  var yyyyMMdd = getTaiwanDateKey();
+  var challenge = getTetrisDailyChallengeForDate(yyyyMMdd);
+  var fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
+
+  if(!playerKey){
+    return Promise.resolve({
+      balance: fallbackBalance !== null ? fallbackBalance : 0,
+      balanceError: fallbackBalance === null,
+      commonDailyRewardClaimed: false,
+      commonDailyRewardError: true,
+      tetrisDailyChallenge: challenge,
+      tetrisDailyChallengeClaimed: false,
+      tetrisDailyChallengeError: true,
+      yyyyMMdd: yyyyMMdd
+    });
+  }
+
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb){
+      return {
+        balance: fallbackBalance !== null ? fallbackBalance : 0,
+        balanceError: fallbackBalance === null,
+        commonDailyRewardClaimed: false,
+        commonDailyRewardError: true,
+        tetrisDailyChallenge: challenge,
+        tetrisDailyChallengeClaimed: false,
+        tetrisDailyChallengeError: true,
+        yyyyMMdd: yyyyMMdd
+      };
+    }
+
+    var basePath = DB_PATHS.players + '/' + playerKey;
+
+    var balancePromise = firebaseDb.ref(basePath + '/wallet/balance').once('value').then(function(snap){
+      var n = Number(snap.val() || 0);
+      if(!isFinite(n)) n = 0;
+      setLastKnownVcoinBalance(n);
+      return {value:n, error:false};
+    }).catch(function(e){
+      console.warn('[VCoins] wallet status balance read failed:', e && e.message ? e.message : e);
+      var fb = getCurrentDisplayedVcoinBalanceFallback();
+      return {value:fb !== null ? fb : 0, error:fb === null};
+    });
+
+    var commonPromise = firebaseDb.ref(basePath + '/dailyRewards/' + yyyyMMdd).once('value').then(function(snap){
+      var v = snap.val() || {};
+      return {claimed:v.claimed === true, error:false};
+    }).catch(function(e){
+      console.warn('[VCoins] common daily status read failed:', e && e.message ? e.message : e);
+      return {claimed:false, error:true};
+    });
+
+    var tetrisPromise = firebaseDb.ref(basePath + '/dailyChallenges/tetris/' + yyyyMMdd).once('value').then(function(snap){
+      var v = snap.val() || {};
+      return {claimed:v.claimed === true, data:v, error:false};
+    }).catch(function(e){
+      console.warn('[VCoins] tetris daily challenge status read failed:', e && e.message ? e.message : e);
+      return {claimed:false, data:null, error:true};
+    });
+
+    return Promise.all([balancePromise, commonPromise, tetrisPromise]).then(function(values){
+      return {
+        balance: values[0].value,
+        balanceError: values[0].error,
+        commonDailyRewardClaimed: values[1].claimed,
+        commonDailyRewardError: values[1].error,
+        tetrisDailyChallenge: challenge,
+        tetrisDailyChallengeClaimed: values[2].claimed,
+        tetrisDailyChallengeError: values[2].error,
+        yyyyMMdd: yyyyMMdd
+      };
+    });
+  }).catch(function(e){
+    console.warn('[VCoins] wallet status unexpected failed:', e && e.message ? e.message : e);
+    return {
+      balance: fallbackBalance !== null ? fallbackBalance : 0,
+      balanceError: fallbackBalance === null,
+      commonDailyRewardClaimed: false,
+      commonDailyRewardError: true,
+      tetrisDailyChallenge: challenge,
+      tetrisDailyChallengeClaimed: false,
+      tetrisDailyChallengeError: true,
+      yyyyMMdd: yyyyMMdd
+    };
+  });
+}
+
+function renderVcoinWalletPanel(status){
+  return renderVcoinHistory(status);
+}
+
+function refreshVcoinWalletStatus(){
+  return loadVcoinWalletStatus(PLAYER && PLAYER.playerKey).then(function(status){
+    renderVcoinWalletPanel(status);
+    return status;
+  });
+}
+
+
 function renderVcoinHistory(data){
   var summary = document.getElementById('vcoin-history-summary');
   var list = document.getElementById('vcoin-history-list');
@@ -2242,24 +2599,38 @@ function renderVcoinHistory(data){
     summary.textContent = '目前餘額：' + balance + ' V幣';
   }
 
+  var challenge = data.tetrisDailyChallenge || getTetrisDailyChallengeForDate(data.yyyyMMdd || getTaiwanDateKey());
+  var commonDone = data.commonDailyRewardClaimed === true;
+  var commonUnknown = data.commonDailyRewardError === true;
+  var tetrisDone = data.tetrisDailyChallengeClaimed === true;
+  var tetrisUnknown = data.tetrisDailyChallengeError === true;
+
   list.innerHTML =
     '<div class="vcoin-wallet-guide">' +
       '<div class="vcoin-wallet-section-title">今日可賺 V幣：</div>' +
-      '<div class="vcoin-earn-card">' +
-        '<strong>🎮 每日遊玩獎勵</strong>' +
-        '<span>任一遊戲完成一次：+30 V幣<br>每日限領一次<br>這是跨遊戲共用獎勵，不是每款遊戲各 +30。</span>' +
+      '<div class="vcoin-task-card' + (commonDone ? ' done' : '') + '">' +
+        '<div class="vcoin-task-title">🎮 每日遊玩獎勵</div>' +
+        '<div class="vcoin-task-reward">任一遊戲完成一次：+30 V幣<br>每日限領一次</div>' +
+        '<div class="vcoin-task-note">這是跨遊戲共用獎勵，不是每款遊戲各 +30。</div>' +
+        '<div class="vcoin-task-status">' + (commonUnknown ? '狀態暫時無法確認' : (commonDone ? '✅ 今日已領取' : '尚未領取')) + '</div>' +
+        (commonDone ? '<span class="vcoin-task-stamp">已得獎勵</span>' : '') +
       '</div>' +
-      '<div class="vcoin-earn-card">' +
-        '<strong>📚 問答今日挑戰</strong>' +
-        '<span>完成指定年級與科目：+10 V幣<br>每日限領一次</span>' +
+      '<div class="vcoin-task-card' + (tetrisDone ? ' done' : '') + '">' +
+        '<div class="vcoin-task-title">🧱 方塊今日挑戰</div>' +
+        '<div class="vcoin-task-reward">今日任務：' + escapeHtml(challenge.name || '今日任務') + '<br>完成獎勵：+10 V幣<br>每日限領一次</div>' +
+        '<div class="vcoin-task-note">' + escapeHtml(challenge.description || '') + '</div>' +
+        '<div class="vcoin-task-status">' + (tetrisUnknown ? '狀態暫時無法確認' : (tetrisDone ? '✅ 今日已完成' : '尚未完成，完成任務即可獲得 +10 V幣。')) + '</div>' +
+        (tetrisDone ? '<span class="vcoin-task-stamp">已得獎勵</span>' : '') +
       '</div>' +
-      '<div class="vcoin-earn-card">' +
-        '<strong>🧱 方塊今日挑戰</strong>' +
-        '<span>即將開放：完成每日指定方塊任務可獲得 +10 V幣<br>每日限領一次</span>' +
+      '<div class="vcoin-task-card">' +
+        '<div class="vcoin-task-title">📚 問答今日挑戰</div>' +
+        '<div class="vcoin-task-reward">完成指定年級與科目：+10 V幣<br>每日限領一次</div>' +
+        '<div class="vcoin-task-note">前往問答遊戲完成挑戰。</div>' +
       '</div>' +
-      '<div class="vcoin-earn-card">' +
-        '<strong>🎵 節奏今日挑戰</strong>' +
-        '<span>即將開放：完成每日指定歌曲或難度任務可獲得 +10 V幣<br>每日限領一次</span>' +
+      '<div class="vcoin-task-card">' +
+        '<div class="vcoin-task-title">🎵 節奏今日挑戰</div>' +
+        '<div class="vcoin-task-reward">完成指定歌曲或難度任務：+10 V幣<br>每日限領一次</div>' +
+        '<div class="vcoin-task-note">即將開放。</div>' +
       '</div>' +
       '<div class="vcoin-wallet-coming">V幣明細未來開放，敬請期待。</div>' +
     '</div>';
@@ -2278,12 +2649,13 @@ function openVcoinHistory(){
   var confirmedPlayerKey = PLAYER && PLAYER.playerKey;
   if(!confirmedPlayerKey){
     var fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
-    renderVcoinHistory({
+    renderVcoinWalletPanel({
       balance: fallbackBalance !== null ? fallbackBalance : 0,
-      logs: [],
       balanceError: fallbackBalance === null,
-      logsError: true,
-      balanceFromFallback: fallbackBalance !== null
+      commonDailyRewardError: true,
+      tetrisDailyChallenge: getTetrisDailyChallengeForDate(getTaiwanDateKey()),
+      tetrisDailyChallengeError: true,
+      yyyyMMdd: getTaiwanDateKey()
     });
     if(summary && fallbackBalance === null) summary.textContent = '目前餘額：請先確認身份';
     return;
@@ -2292,18 +2664,19 @@ function openVcoinHistory(){
   if(summary) summary.textContent = '目前餘額：讀取中...';
   if(list) list.innerHTML = '<div class="vcoin-empty-msg">🎈 載入 V幣錢包中...</div>';
 
-  loadVcoinHistory(confirmedPlayerKey).then(function(data){
-    renderVcoinHistory(data);
-    refreshPlayerVCoins();
+  loadVcoinWalletStatus(confirmedPlayerKey).then(function(status){
+    renderVcoinWalletPanel(status);
+    refreshPlayerMetaUI();
   }).catch(function(e){
-    console.warn('[VCoins] wallet unexpected read failed:', e && e.message ? e.message : e);
+    console.warn('[VCoins] wallet status unexpected read failed:', e && e.message ? e.message : e);
     var fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
-    renderVcoinHistory({
+    renderVcoinWalletPanel({
       balance: fallbackBalance !== null ? fallbackBalance : 0,
-      logs: [],
       balanceError: fallbackBalance === null,
-      logsError: true,
-      balanceFromFallback: fallbackBalance !== null
+      commonDailyRewardError: true,
+      tetrisDailyChallenge: getTetrisDailyChallengeForDate(getTaiwanDateKey()),
+      tetrisDailyChallengeError: true,
+      yyyyMMdd: getTaiwanDateKey()
     });
   });
 }
@@ -3490,7 +3863,8 @@ function gameOver(){
     level: level,
     lines: lines,
     difficulty: diff,
-    peakCombo: peakCombo || 0
+    peakCombo: peakCombo || 0,
+    maxCombo: peakCombo || 0
   };
   checkAndUnlockTetrisTitles(titleResult).then(function(newTitles){
     if(newTitles && newTitles.length){
@@ -3508,7 +3882,7 @@ function gameOver(){
   });
   saveLB();
   updateBestDisp();
-  claimDailyVCoinsForTetris().then(function(){ refreshPlayerMetaUI(); });
+  runVcoinRewardsAfterGame(titleResult).then(function(){ refreshPlayerMetaUI(); });
   setTimeout(()=>{
     $("res-score").textContent=score.toLocaleString();
     $("res-level").textContent=level;
