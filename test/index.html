@@ -433,7 +433,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.0-tetris-title-system-test-4</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.1-cloud-best-score-test-1</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -765,7 +765,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 </div>
 
 <div id="toast"></div>
-<button id="fs-btn" class="off" title="全螢幕">⛶</button>
+<button id="fs-btn" title="全螢幕">⛶</button>
 <div class="admin-lnk" id="admin-lnk">⚙</div>
 
 <script>
@@ -2871,6 +2871,7 @@ function gameOver(){
     console.warn('[TetrisTitle] gameOver title check failed:', e && e.message ? e.message : e);
   });
   saveLB();
+  updateBestDisp();
   claimDailyVCoinsForTetris().then(function(){ refreshPlayerMetaUI(); });
   setTimeout(()=>{
     $("res-score").textContent=score.toLocaleString();
@@ -3267,9 +3268,38 @@ $("btn-res-profile").addEventListener("click", openProfileFromTopCard);
 $("btn-replay").addEventListener("click",showDiffSelect);
 
 // ── BEST SCORE ──
+function getLocalBestScore(){
+  return parseInt(localStorage.getItem("vtetris_best") || "0", 10) || 0;
+}
+
+function renderBestScore(value){
+  var n = parseInt(value || "0", 10) || 0;
+  $("best-disp").textContent = n ? n.toLocaleString() : "—";
+}
+
 function updateBestDisp(){
-  const b=parseInt(localStorage.getItem("vtetris_best")||"0");
-  $("best-disp").textContent=b?b.toLocaleString():"—";
+  var localBest = getLocalBestScore();
+  renderBestScore(localBest);
+  if(!PLAYER || !PLAYER.playerKey) return Promise.resolve(localBest);
+
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb) return localBest;
+    return firebaseDb.ref(DB_PATHS.leaderboards + '/' + PLAYER.playerKey).once('value').then(function(snap){
+      var data = snap.val();
+      var cloudScore = data && data.score ? parseInt(data.score, 10) || 0 : 0;
+      if(cloudScore > 0){
+        renderBestScore(cloudScore);
+        if(cloudScore > localBest) localStorage.setItem("vtetris_best", String(cloudScore));
+        return cloudScore;
+      }
+      renderBestScore(localBest);
+      return localBest;
+    });
+  }).catch(function(e){
+    console.warn('[BestScore] cloud best load failed:', e && e.message ? e.message : e);
+    renderBestScore(localBest);
+    return localBest;
+  });
 }
 
 // ── ADMIN ──
