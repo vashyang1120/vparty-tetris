@@ -586,6 +586,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   #vcoin-history-wrap,#title-grid-wrap{margin-bottom:150px}
   #vcoin-history-list{max-height:30vh}
 }
+
+/* v1.3.5-test-5: desktop wide view must never show mobile controls */
+@media (min-width:901px){
+  #mob-ctrl{display:none!important}
+  #s-game{padding-bottom:0!important}
+}
+@media (max-width:900px){
+  #mob-ctrl{display:flex}
+  #s-game{padding-bottom:170px}
+}
 </style>
 </head>
 <body>
@@ -606,7 +616,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.5-tetris-daily-challenge-foundation-test-4</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.5-tetris-daily-challenge-foundation-test-5</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -2825,11 +2835,30 @@ let balloonImg=null, balloonCache={};
 
 function $ (id){return document.getElementById(id)}
 
+
+function shouldShowMobileControls(){
+  var w = window.innerWidth || document.documentElement.clientWidth || 0;
+  if(w > 900) return false;
+  return true;
+}
+
+function syncMobileControlsVisibility(){
+  var mob = document.getElementById("mob-ctrl");
+  if(mob){
+    mob.style.display = shouldShowMobileControls() ? "flex" : "none";
+  }
+  var game = document.getElementById("s-game");
+  if(game){
+    game.style.paddingBottom = shouldShowMobileControls() ? "170px" : "0px";
+  }
+}
+
 function initCanvas(){
   bCanvas=$("board-canvas"); bCtx=bCanvas.getContext("2d");
   nCanvas=$("next-canvas");  nCtx=nCanvas.getContext("2d");
   pCanvas=$("particle-canvas"); pCtx=pCanvas.getContext("2d");
-  const isMob = window.innerWidth < 900 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  syncMobileControlsVisibility();
+  const isMob = shouldShowMobileControls();
   // Mobile controls height: dpad is about 160px + padding
   const mobCtrlH = isMob ? 170 : 0;
   const sideW = Math.min(130, Math.max(88, window.innerWidth * 0.13)) * 2;
@@ -2876,7 +2905,8 @@ function startGame(d){
   // Double rAF: first frame lets flex layout compute, second frame we measure
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
-      initCanvas();
+      syncMobileControlsVisibility();
+  initCanvas();
       lastT=performance.now();
       raf=requestAnimationFrame(loop);
     });
@@ -4653,6 +4683,7 @@ if(topPlayerCard){
 
 window.addEventListener("resize",()=>{
   if($("s-game").classList.contains("off")) return;
+  syncMobileControlsVisibility();
   initCanvas(); draw();
 });
 
