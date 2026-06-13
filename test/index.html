@@ -233,14 +233,23 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .profile-data-toggle span{font-size:14px}
 .profile-data-toggle small{font-size:10px;color:var(--text2);font-weight:900}
 .profile-data-content{padding:12px 12px 4px}
-.profile-data-card.collapsed{margin-bottom:10px}
+.profile-data-card.collapsed{
+  margin:10px 0 12px;border-color:var(--purple-lt);
+  box-shadow:0 6px 20px rgba(155,93,229,.16);
+}
 .profile-data-card.collapsed .profile-data-content{display:none}
 .profile-data-card.collapsed .profile-data-toggle{
-  padding:10px 14px;background:linear-gradient(135deg,#fff,var(--purple-bg));
+  min-height:52px;padding:12px 16px;background:linear-gradient(135deg,#fff,var(--purple-bg));
   border-bottom:0;
+}
+.profile-data-card.collapsed .profile-data-toggle span{
+  font-size:15px;color:var(--purple);display:flex;align-items:center;gap:6px;
 }
 .profile-data-card.collapsed .profile-data-toggle small::before{content:"已收合，點擊展開"}
 .profile-data-card.collapsed #profile-data-toggle-hint{font-size:0}
+.profile-data-card.collapsed .profile-data-toggle::after{
+  content:"⌄";font-size:18px;color:var(--purple);font-weight:900;margin-left:8px;
+}
 .profile-status-grid{margin:0}
 .profile-save-note{font-size:11px;color:var(--text2);margin-top:8px;margin-bottom:12px}
 .profile-floating-actions{
@@ -285,6 +294,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   .profile-floating-actions{bottom:10px;border-radius:20px;padding:9px 8px;gap:6px}
   .profile-floating-actions .btn{font-size:11px;padding:9px 10px}
   .profile-floating-actions .btn-p{min-width:118px}
+  .profile-data-card.collapsed .profile-data-toggle{min-height:50px;padding:11px 14px}
+  .profile-data-card.collapsed .profile-data-toggle span{font-size:14px}
   .lb-floating-actions{bottom:10px}
 }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -479,7 +490,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.2-profile-lb-floating-ui-test-2</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.2-profile-lb-floating-ui-test-3</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -563,8 +574,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <button class="btn btn-outline btn-sm" id="btn-title-collection">🎖 稱號收藏</button>
     <button class="btn btn-outline btn-sm" id="btn-profile-back">← 返回</button>
   </div>
-  <div class="profile-save-note">設定會自動儲存，下次直接開始！</div>
-
   <!-- 頭像選擇 Grid（動態顯示）-->
   <div id="av-grid-wrap" style="display:none;width:min(480px,94vw);margin-top:12px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;box-shadow:var(--shadow-sm);">
     <div id="av-grid-title" style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px;"></div>
@@ -576,6 +585,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <div id="title-grid-title">🎖 稱號收藏</div>
     <div id="title-grid"></div>
   </div>
+  <div class="profile-save-note">設定會自動儲存，下次直接開始！</div>
 </div>
 
 <!-- GAME -->
@@ -1591,8 +1601,12 @@ function syncProfileDataCollapseByPanels(){
 function scrollProfilePanelIntoView(el){
   if(!el || !el.scrollIntoView) return;
   setTimeout(function(){
-    try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ el.scrollIntoView(); }
+    try{ el.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){ el.scrollIntoView(); }
   }, 40);
+}
+function scrollProfileDataCardIntoView(){
+  var card = document.getElementById('profile-data-card');
+  scrollProfilePanelIntoView(card);
 }
 
 function buildAvGrid(mode){
@@ -1610,6 +1624,7 @@ function buildAvGrid(mode){
   }
   wrap.style.display = "block";
   setProfileDataCollapsed(true);
+  scrollProfileDataCardIntoView();
   grid.innerHTML = "";
 
   // 內建頭像
@@ -2770,6 +2785,7 @@ function toggleTitleCollection(){
     hideAvGrid();
     wrap.style.display = 'block';
     setProfileDataCollapsed(true);
+    scrollProfileDataCardIntoView();
     buildTitleGrid();
   }else{
     hideTitleGrid();
