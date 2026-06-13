@@ -292,6 +292,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   border:1.5px solid var(--purple-lt);padding:14px;box-shadow:var(--shadow-sm);
 }
 #title-grid-title{font-size:13px;font-weight:900;color:var(--purple);margin-bottom:10px}
+.title-filter-row{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.title-filter-btn{
+  border:1.5px solid var(--purple-lt);background:#fff;color:var(--purple);
+  border-radius:999px;padding:6px 10px;font-family:'Nunito','Noto Sans TC',sans-serif;
+  font-size:11px;font-weight:900;cursor:pointer;box-shadow:var(--shadow-sm);
+}
+.title-filter-btn.active{background:linear-gradient(135deg,var(--purple),var(--pink2));color:#fff;border-color:transparent}
+.title-empty-msg{
+  color:var(--text2);font-size:12px;font-weight:800;text-align:center;
+  line-height:1.6;padding:18px 10px;background:var(--pink-bg);border-radius:16px;
+}
+.title-source{font-size:10px;color:var(--text2);font-weight:900;margin-top:3px}
+.title-status{font-size:10px;font-weight:900;margin-top:5px;color:var(--purple)}
 #title-grid{display:flex;flex-direction:column;gap:8px}
 .title-item{
   background:#fff;border:1.5px solid var(--purple-lt);border-radius:16px;
@@ -517,7 +530,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.2-profile-lb-floating-ui-test-4</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.3-shared-title-collection-foundation-test-1</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -953,6 +966,7 @@ var TETRIS_TITLES = {
     conditionText: "單場 Level 達 5"
   }
 };
+var titleCollectionFilter = "all";
 // ── avatarCatalog：從 Firebase 讀取學生/特殊頭像 ──
 function loadAvatarCatalog() {
   if (!FIREBASE_ENABLED) return Promise.resolve({});
@@ -1471,6 +1485,7 @@ function loadEquippedTitleForCurrentPlayer(){
     return firebaseDb.ref(basePath + '/equippedTitle').once('value').then(function(equippedSnap){
       var equipped = equippedSnap.val();
       if(equipped && equipped.name){
+        window.currentEquippedTitleData = equipped;
         playerEquippedTitleName = equipped.name;
         updateTopPlayerCard();
         updateProfileTitleBox();
@@ -1478,6 +1493,7 @@ function loadEquippedTitleForCurrentPlayer(){
       }
       return firebaseDb.ref(basePath + '/quizEquippedTitle').once('value').then(function(quizSnap){
         var quizTitle = quizSnap.val();
+        window.currentEquippedTitleData = (quizTitle && quizTitle.name) ? quizTitle : null;
         playerEquippedTitleName = (quizTitle && quizTitle.name) ? quizTitle.name : '未裝備';
         updateTopPlayerCard();
         updateProfileTitleBox();
@@ -2736,75 +2752,200 @@ function showTitleUnlockNotice(newTitles){
   toast('🎖 解鎖新稱號！\n' + nameList, 4200);
 }
 
-function loadTetrisUnlockedTitles(){
-  var playerKey = PLAYER && PLAYER.playerKey;
-  if(!playerKey) return Promise.resolve({});
+function getSharedTitleCatalog(){
+  return {
+    all: { gameId: 'all', gameName: '全部', emoji: '🌟', titles: {} },
+    tetris: {
+      gameId: 'tetris',
+      gameName: '方塊遊戲',
+      emoji: '🧱',
+      titles: getTetrisTitleCatalog()
+    },
+    quiz: {
+      gameId: 'quiz',
+      gameName: '問答遊戲',
+      emoji: '📚',
+      titles: {}
+    },
+    rhythm: {
+      gameId: 'rhythm',
+      gameName: '節奏遊戲',
+      emoji: '🎵',
+      titles: {}
+    },
+    adventure: {
+      gameId: 'adventure',
+      gameName: '冒險遊戲',
+      emoji: '🏝️',
+      titles: {}
+    }
+  };
+}
+
+function getTitleGameMeta(gameId){
+  var catalog = getSharedTitleCatalog();
+  return catalog[gameId] || { gameId: gameId || '', gameName: gameId || '未知遊戲', emoji: '🎖', titles: {} };
+}
+
+function getEquippedTitleKey(){
+  return (window.currentEquippedTitleData && window.currentEquippedTitleData.titleKey) || '';
+}
+
+function getEquippedTitleGameId(){
+  return (window.currentEquippedTitleData && window.currentEquippedTitleData.gameId) || '';
+}
+
+function isTitleEquipped(gameId, titleKey){
+  return getEquippedTitleGameId() === gameId && getEquippedTitleKey() === titleKey;
+}
+
+function loadUnlockedTitlesByGame(playerKey){
+  playerKey = playerKey || (PLAYER && PLAYER.playerKey);
+  var empty = { tetris:{}, quiz:{}, rhythm:{}, adventure:{} };
+  if(!playerKey) return Promise.resolve(empty);
   return ensureFirebaseReady().then(function(ok){
-    if(!ok || !firebaseDb) return {};
-    return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/titles/tetris').once('value').then(function(snap){
-      return snap.val() || {};
+    if(!ok || !firebaseDb) return empty;
+    var games = ['tetris','quiz','rhythm','adventure'];
+    var basePath = DB_PATHS.players + '/' + playerKey + '/titles';
+    return Promise.all(games.map(function(gameId){
+      return firebaseDb.ref(basePath + '/' + gameId).once('value').then(function(snap){
+        return [gameId, snap.val() || {}];
+      }).catch(function(e){
+        console.warn('[TitleCollection] load failed for', gameId, e && e.message ? e.message : e);
+        return [gameId, {}];
+      });
+    })).then(function(rows){
+      var result = { tetris:{}, quiz:{}, rhythm:{}, adventure:{} };
+      rows.forEach(function(row){ result[row[0]] = row[1] || {}; });
+      return result;
     });
   }).catch(function(e){
-    console.warn('[TitleCollection] load failed:', e && e.message ? e.message : e);
-    return {};
+    console.warn('[TitleCollection] load all failed:', e && e.message ? e.message : e);
+    return empty;
   });
 }
 
-function getEquippedTitleKeyFromName(){
-  if(!playerEquippedTitleName || playerEquippedTitleName === '未裝備') return '';
-  var catalog = getTetrisTitleCatalog();
-  for(var k in catalog){
-    if(catalog[k] && catalog[k].name === playerEquippedTitleName) return k;
-  }
-  return '';
+function getUnlockedTitleMapForGame(gameId, unlockedByGame){
+  return (unlockedByGame && unlockedByGame[gameId]) || {};
 }
 
-function buildTitleGrid(){
-  var wrap = document.getElementById('title-grid-wrap');
+function loadTetrisUnlockedTitles(){
+  return loadUnlockedTitlesByGame(PLAYER && PLAYER.playerKey).then(function(map){
+    return map.tetris || {};
+  });
+}
+
+function buildSharedTitleCollectionItems(filterGameId, unlockedByGame){
+  var catalog = getSharedTitleCatalog();
+  var games = filterGameId === 'all' ? ['tetris','quiz','rhythm','adventure'] : [filterGameId];
+  var items = [];
+  games.forEach(function(gameId){
+    var meta = catalog[gameId];
+    if(!meta || gameId === 'all') return;
+    var titles = meta.titles || {};
+    Object.keys(titles).forEach(function(titleKey){
+      var title = titles[titleKey];
+      var unlockedMap = getUnlockedTitleMapForGame(gameId, unlockedByGame);
+      var isUnlocked = !!(unlockedMap[titleKey] && unlockedMap[titleKey].unlocked === true);
+      items.push({
+        gameId: gameId,
+        gameName: meta.gameName,
+        emoji: meta.emoji,
+        titleKey: titleKey,
+        title: title,
+        unlocked: isUnlocked
+      });
+    });
+  });
+  return items;
+}
+
+function renderSharedTitleCollection(filterGameId){
+  titleCollectionFilter = filterGameId || titleCollectionFilter || 'all';
   var grid = document.getElementById('title-grid');
-  if(!wrap || !grid) return Promise.resolve();
-  grid.innerHTML = '<div style="font-size:12px;color:var(--text2);padding:10px;text-align:center;">🎈 載入稱號中...</div>';
-  return Promise.all([loadTetrisUnlockedTitles(), loadEquippedTitleForCurrentPlayer()]).then(function(values){
-    var unlocked = values[0] || {};
-    var equippedKey = getEquippedTitleKeyFromName();
-    var catalog = getTetrisTitleCatalog();
-    grid.innerHTML = '';
-    Object.keys(catalog).forEach(function(key){
-      var title = catalog[key];
-      var isUnlocked = !!(unlocked[key] && unlocked[key].unlocked === true);
-      var isEquipped = isUnlocked && equippedKey === key;
-      var item = document.createElement('div');
-      item.className = 'title-item' + (isUnlocked ? '' : ' locked') + (isEquipped ? ' equipped' : '');
-      var icon = isUnlocked ? '🎖' : '🔒';
-      var actionHtml = '';
-      if(isUnlocked){
-        actionHtml = isEquipped
-          ? '<span class="title-badge">已裝備</span>'
-          : '<button class="title-equip-btn" data-title-key="' + key + '">裝備</button>';
-      }else{
-        actionHtml = '<span class="title-badge">尚未解鎖</span>';
-      }
-      item.innerHTML =
-        '<div class="title-name">' + icon + ' ' + title.name + '</div>' +
-        '<div class="title-condition">' + title.conditionText + '</div>' +
-        '<div class="title-actions">' + actionHtml + '</div>';
-      if(!isUnlocked){
-        item.addEventListener('click', function(){
-          toast('🔒 解鎖條件：' + title.conditionText);
-        });
-      }
-      grid.appendChild(item);
+  var titleEl = document.getElementById('title-grid-title');
+  if(!grid) return Promise.resolve();
+  var catalog = getSharedTitleCatalog();
+  if(titleEl) titleEl.textContent = '🎖 共用稱號收藏';
+  grid.innerHTML = '<div class="title-empty-msg">🎈 載入 V宇宙稱號中...</div>';
+
+  return Promise.all([loadUnlockedTitlesByGame(PLAYER && PLAYER.playerKey), loadEquippedTitleForCurrentPlayer()]).then(function(values){
+    var unlockedByGame = values[0] || {};
+    var items = buildSharedTitleCollectionItems(titleCollectionFilter, unlockedByGame);
+    var tabs = [
+      ['all','全部'],
+      ['tetris','方塊'],
+      ['quiz','問答'],
+      ['rhythm','節奏'],
+      ['adventure','冒險']
+    ];
+    var tabHtml = '<div class="title-filter-row">' + tabs.map(function(tab){
+      var meta = catalog[tab[0]] || {};
+      var active = tab[0] === titleCollectionFilter ? ' active' : '';
+      return '<button class="title-filter-btn' + active + '" data-title-filter="' + tab[0] + '">' + (meta.emoji || '') + ' ' + tab[1] + '</button>';
+    }).join('') + '</div>';
+
+    if(!items.length){
+      grid.innerHTML = tabHtml + '<div class="title-empty-msg">此遊戲稱號尚未開放，未來會加入更多 V宇宙稱號。</div>';
+    }else{
+      var itemHtml = items.map(function(item){
+        var title = item.title || {};
+        var isUnlocked = item.unlocked;
+        var isEquipped = isUnlocked && isTitleEquipped(item.gameId, item.titleKey);
+        var icon = isUnlocked ? '🎖' : '🔒';
+        var actionHtml = '';
+        if(isUnlocked){
+          actionHtml = isEquipped
+            ? '<span class="title-badge">已裝備</span>'
+            : '<button class="title-equip-btn" data-game-id="' + item.gameId + '" data-title-key="' + item.titleKey + '">裝備</button>';
+        }else{
+          actionHtml = '<span class="title-badge">🔒 尚未解鎖</span>';
+        }
+        return '<div class="title-item' + (isUnlocked ? '' : ' locked') + (isEquipped ? ' equipped' : '') + '" data-game-id="' + item.gameId + '" data-title-key="' + item.titleKey + '">' +
+          '<div class="title-name">' + icon + ' ' + (title.name || item.titleKey) + '</div>' +
+          '<div class="title-source">' + item.emoji + ' ' + item.gameName + '</div>' +
+          '<div class="title-condition">條件：' + (title.conditionText || '尚未設定條件') + '</div>' +
+          '<div class="title-status">狀態：' + (isUnlocked ? '已解鎖' : '未解鎖') + '</div>' +
+          '<div class="title-actions">' + actionHtml + '</div>' +
+        '</div>';
+      }).join('');
+      grid.innerHTML = tabHtml + itemHtml;
+    }
+
+    grid.querySelectorAll('.title-filter-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        setTitleCollectionFilter(btn.getAttribute('data-title-filter') || 'all');
+      });
     });
     grid.querySelectorAll('.title-equip-btn').forEach(function(btn){
       btn.addEventListener('click', function(e){
         e.stopPropagation();
-        equipTitleFromCollection(btn.getAttribute('data-title-key'));
+        equipSharedTitle(btn.getAttribute('data-game-id'), btn.getAttribute('data-title-key'));
+      });
+    });
+    grid.querySelectorAll('.title-item.locked').forEach(function(item){
+      item.addEventListener('click', function(){
+        var gameId = item.getAttribute('data-game-id');
+        var titleKey = item.getAttribute('data-title-key');
+        var meta = getTitleGameMeta(gameId);
+        var title = meta.titles && meta.titles[titleKey];
+        toast('🔒 解鎖條件：' + ((title && title.conditionText) || '尚未開放'));
       });
     });
   }).catch(function(e){
-    console.warn('[TitleCollection] build failed:', e && e.message ? e.message : e);
-    grid.innerHTML = '<div style="font-size:12px;color:var(--text2);padding:10px;text-align:center;">⚠️ 稱號收藏暫時無法載入</div>';
+    console.warn('[TitleCollection] shared render failed:', e && e.message ? e.message : e);
+    grid.innerHTML = '<div class="title-empty-msg">⚠️ 稱號收藏暫時無法載入</div>';
   });
+}
+
+function setTitleCollectionFilter(gameId){
+  titleCollectionFilter = gameId || 'all';
+  renderSharedTitleCollection(titleCollectionFilter);
+}
+
+function buildTitleGrid(){
+  return renderSharedTitleCollection(titleCollectionFilter || 'all');
 }
 
 function hideTitleGrid(){
@@ -2822,43 +2963,49 @@ function toggleTitleCollection(){
     wrap.style.display = 'block';
     setProfileDataCollapsed(true);
     scrollProfileDataCardIntoView();
-    buildTitleGrid();
+    renderSharedTitleCollection(titleCollectionFilter || 'all');
   }else{
     hideTitleGrid();
   }
 }
 
-function equipTitleFromCollection(titleKey){
-  var catalog = getTetrisTitleCatalog();
-  var title = catalog[titleKey];
+function equipSharedTitle(gameId, titleKey){
+  var meta = getTitleGameMeta(gameId);
+  var title = meta.titles && meta.titles[titleKey];
   var playerKey = PLAYER && PLAYER.playerKey;
   if(!title || !playerKey) return;
-  loadTetrisUnlockedTitles().then(function(unlocked){
-    if(!unlocked[titleKey] || unlocked[titleKey].unlocked !== true){
-      toast('🔒 尚未解鎖：' + title.conditionText);
+  loadUnlockedTitlesByGame(playerKey).then(function(unlockedByGame){
+    var unlockedMap = getUnlockedTitleMapForGame(gameId, unlockedByGame);
+    if(!unlockedMap[titleKey] || unlockedMap[titleKey].unlocked !== true){
+      toast('🔒 尚未解鎖：' + (title.conditionText || '尚未開放'));
       return null;
     }
     return ensureFirebaseReady().then(function(ok){
       if(!ok || !firebaseDb) throw new Error('Firebase not ready');
       var payload = {
-        titleKey: title.titleKey,
+        titleKey: title.titleKey || titleKey,
         name: title.name,
-        gameId: title.gameId,
-        source: title.source,
-        originPath: 'titles/tetris/' + titleKey,
+        gameId: gameId,
+        source: title.source || '',
+        originPath: 'titles/' + gameId + '/' + titleKey,
         equippedAt: Date.now()
       };
       return firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/equippedTitle').set(payload).then(function(){
+        window.currentEquippedTitleData = payload;
         playerEquippedTitleName = title.name;
         refreshPlayerMetaUI();
-        buildTitleGrid();
+        renderSharedTitleCollection(titleCollectionFilter || 'all');
         toast('🎖 已裝備稱號：' + title.name);
       });
     });
   }).catch(function(e){
-    console.warn('[TitleCollection] equip failed:', e && e.message ? e.message : e);
+    console.warn('[TitleCollection] equip shared failed:', e && e.message ? e.message : e);
     toast('⚠️ 稱號裝備失敗，請稍後再試');
   });
+}
+
+function equipTitleFromCollection(titleKey){
+  return equipSharedTitle('tetris', titleKey);
 }
 
 
