@@ -562,7 +562,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-history-foundation-test-2</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-history-foundation-test-3</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -2096,46 +2096,126 @@ function normalizeVcoinLog(raw, key){
     balanceAfter: raw.balanceAfter
   };
 }
+function normalizeVcoinLogSnapshot(snap){
+  var rows = [];
+  if(snap && snap.forEach){
+    snap.forEach(function(child){
+      try{
+        rows.push(normalizeVcoinLog(child.val() || {}, child.key));
+      }catch(e){
+        console.warn("[VCoins] skip malformed log:", child && child.key, e);
+      }
+    });
+  }
+  rows.sort(function(a,b){
+    return Number(b.ts || b.createdAt || 0) - Number(a.ts || a.createdAt || 0);
+  });
+  return rows.slice(0,20);
+}
 function loadVcoinHistory(playerKey){
   playerKey = playerKey || (PLAYER && PLAYER.playerKey);
-  var empty = { balance:0, logs:[] };
-  if(!playerKey) return Promise.resolve(empty);
+  if(!playerKey){
+    return Promise.resolve({
+      balance: 0,
+      logs: [],
+      balanceError: true,
+      logsError: true
+    });
+  }
+
   return ensureFirebaseReady().then(function(ok){
-    if(!ok || !firebaseDb) return empty;
-    var walletRef = firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/wallet/balance');
-    var logsRef = firebaseDb.ref(DB_PATHS.players + '/' + playerKey + '/vCoinLogs');
-    var balancePromise = walletRef.once('value').then(function(snap){
-      var v = Number(snap.val() || 0);
-      return isNaN(v) ? 0 : v;
-    }).catch(function(e){
-      console.warn('[VCoins] wallet read failed:', e && e.message ? e.message : e);
-      return 0;
-    });
-    var logsPromise = logsRef.orderByChild('ts').limitToLast(20).once('value').then(function(snap){
-      var rows = [];
-      snap.forEach(function(child){ rows.push(normalizeVcoinLog(child.val() || {}, child.key)); });
-      rows.sort(function(a,b){ return (b.ts || 0) - (a.ts || 0); });
-      return rows.slice(0,20);
-    });
+    if(!ok || !firebaseDb){
+      return {
+        balance: 0,
+        logs: [],
+        balanceError: true,
+        logsError: true
+      };
+    }
+
+    var basePath = DB_PATHS.players + '/' + playerKey;
+
+    var balancePromise = firebaseDb.ref(basePath + '/wallet/balance')
+      .once('value')
+      .then(function(snap){
+        var n = Number(snap.val() || 0);
+        return isFinite(n) ? n : 0;
+      })
+      .catch(function(e){
+        console.warn('[VCoins] balance read failed:', e && e.message ? e.message : e);
+        return null;
+      });
+
+    var logsRef = firebaseDb.ref(basePath + '/vCoinLogs');
+    var logsPromise = logsRef
+      .orderByChild('ts')
+      .limitToLast(20)
+      .once('value')
+      .then(function(snap){
+        return normalizeVcoinLogSnapshot(snap);
+      })
+      .catch(function(e){
+        console.warn('[VCoins] indexed logs query failed, fallback to full read:', e && e.message ? e.message : e);
+        return logsRef.once('value')
+          .then(function(snap){
+            return normalizeVcoinLogSnapshot(snap);
+          })
+          .catch(function(e2){
+            console.warn('[VCoins] fallback logs read failed:', e2 && e2.message ? e2.message : e2);
+            return null;
+          });
+      });
+
     return Promise.all([balancePromise, logsPromise]).then(function(values){
-      return { balance: values[0], logs: values[1] || [] };
+      var balance = values[0];
+      var logs = values[1];
+      return {
+        balance: balance === null ? 0 : balance,
+        logs: Array.isArray(logs) ? logs : [],
+        balanceError: balance === null,
+        logsError: logs === null
+      };
     });
+  }).catch(function(e){
+    console.warn('[VCoins] history read unexpected failed:', e && e.message ? e.message : e);
+    return {
+      balance: 0,
+      logs: [],
+      balanceError: true,
+      logsError: true
+    };
   });
 }
 function renderVcoinHistory(data){
   var summary = document.getElementById('vcoin-history-summary');
   var list = document.getElementById('vcoin-history-list');
   if(!summary || !list) return;
-  var balance = Number(data && data.balance);
+
+  data = data || {};
+  var balance = Number(data.balance);
   if(isNaN(balance)) balance = 0;
-  summary.textContent = '目前餘額：' + balance + ' V幣';
-  var logs = (data && data.logs) || [];
+
+  if(data.balanceError === true){
+    summary.textContent = '目前餘額：讀取失敗';
+  }else{
+    summary.textContent = '目前餘額：' + balance + ' V幣';
+  }
+
+  if(data.logsError === true){
+    list.innerHTML = '<div class="vcoin-empty-msg">V幣紀錄暫時讀取失敗，但餘額仍可正常顯示。</div>';
+    return;
+  }
+
+  var logs = Array.isArray(data.logs) ? data.logs : [];
   if(!logs.length){
     list.innerHTML = '<div class="vcoin-empty-msg">目前還沒有 V幣紀錄。<br>完成遊戲或挑戰後，這裡會顯示你的 V幣取得明細。</div>';
     return;
   }
+
   list.innerHTML = logs.map(function(log){
+    log = log || {};
     var amount = Number(log.amount || 0);
+    if(isNaN(amount)) amount = 0;
     var amountText = (amount > 0 ? '+' : '') + amount;
     var amountClass = amount < 0 ? ' negative' : '';
     var meta = escapeHtml(log.timeText || '時間未記錄') + '｜' + escapeHtml(log.sourceLabel || 'V幣異動');
@@ -2167,9 +2247,13 @@ function openVcoinHistory(){
     renderVcoinHistory(data);
     refreshPlayerVCoins();
   }).catch(function(e){
-    console.warn('[VCoins] history read failed:', e && e.message ? e.message : e);
-    if(summary) summary.textContent = '目前餘額：讀取失敗';
-    if(list) list.innerHTML = '<div class="vcoin-empty-msg">V幣紀錄暫時讀取失敗，請稍後再試。</div>';
+    console.warn('[VCoins] history unexpected read failed:', e && e.message ? e.message : e);
+    renderVcoinHistory({
+      balance: 0,
+      logs: [],
+      balanceError: true,
+      logsError: true
+    });
   });
 }
 function closeVcoinHistory(){
