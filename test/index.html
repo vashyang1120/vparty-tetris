@@ -220,7 +220,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .identity-box code{display:block;margin-top:4px;font-size:10px;line-height:1.4;color:var(--text2);word-break:break-all;background:var(--pink-bg);border-radius:10px;padding:6px 8px}
 .profile-wallet-box strong{font-family:'Fredoka One',cursive;color:#d59a00;font-size:20px}
 .profile-title-current strong{color:var(--purple)}
-#s-profile{padding-bottom:118px}
+#s-profile{padding-bottom:190px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .profile-data-card{
   width:min(480px,94vw);
   margin:10px 0 14px;
@@ -288,7 +288,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .profile-floating-actions .btn{margin:0}
 .profile-floating-actions .btn-p{min-width:126px}
 #title-grid-wrap{
-  width:min(480px,94vw);margin-top:12px;background:#fff;border-radius:20px;
+  width:min(480px,94vw);margin-top:12px;margin-bottom:124px;background:#fff;border-radius:20px;
   border:1.5px solid var(--purple-lt);padding:14px;box-shadow:var(--shadow-sm);
 }
 #title-grid-title{font-size:13px;font-weight:900;color:var(--purple);margin-bottom:10px}
@@ -306,7 +306,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .title-source{font-size:10px;color:var(--text2);font-weight:900;margin-top:3px}
 .title-status{font-size:10px;font-weight:900;margin-top:5px;color:var(--purple)}
 #vcoin-history-wrap{
-  width:min(480px,94vw);margin-top:12px;background:#fff;border-radius:20px;
+  width:min(480px,94vw);margin-top:12px;margin-bottom:124px;background:#fff;border-radius:20px;
   border:1.5px solid var(--yellow);padding:14px;box-shadow:var(--shadow-sm);
 }
 #vcoin-history-title{font-size:13px;font-weight:900;color:#d59a00;margin-bottom:10px}
@@ -315,7 +315,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   padding:10px 12px;color:#d59a00;font-weight:900;font-size:12px;margin-bottom:10px;
 }
 #vcoin-history-list{
-  display:flex;flex-direction:column;gap:8px;max-height:min(320px,42vh);
+  display:flex;flex-direction:column;gap:8px;max-height:min(260px,34vh);
   overflow-y:auto;-webkit-overflow-scrolling:touch;
 }
 .vcoin-log-item{background:#fff;border:1.5px solid rgba(255,190,11,.28);border-radius:16px;padding:10px 12px}
@@ -535,9 +535,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #fs-btn.off{display:none !important;}
 
 @media(max-width:420px){
+  #s-profile{padding-bottom:230px}
   .profile-floating-actions{gap:6px;padding:8px 10px}
   .profile-floating-actions .btn{font-size:10px;padding:7px 8px}
-  .profile-floating-actions .btn-p{min-width:110px}
+  .profile-floating-actions .btn-p{min-width:108px}
+  #vcoin-history-wrap,#title-grid-wrap{margin-bottom:150px}
+  #vcoin-history-list{max-height:30vh}
 }
 </style>
 </head>
@@ -559,7 +562,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-history-foundation-test-1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-history-foundation-test-2</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -645,7 +648,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <button class="btn btn-outline btn-sm" id="btn-profile-back">← 返回</button>
   </div>
   <!-- 頭像選擇 Grid（動態顯示）-->
-  <div id="av-grid-wrap" style="display:none;width:min(480px,94vw);margin-top:12px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;box-shadow:var(--shadow-sm);">
+  <div id="av-grid-wrap" style="display:none;width:min(480px,94vw);margin-top:12px;margin-bottom:124px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;box-shadow:var(--shadow-sm);">
     <div id="av-grid-title" style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px;"></div>
     <div id="av-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;max-height:240px;overflow-y:auto;"></div>
   </div>
@@ -1702,6 +1705,18 @@ function scrollProfileDataCardIntoView(){
   var card = document.getElementById('profile-data-card');
   scrollProfilePanelIntoView(card);
 }
+function scrollProfilePanelStartIntoView(el){
+  if(!el) return;
+  setTimeout(function(){
+    try{
+      if(el.scrollIntoView) el.scrollIntoView({behavior:'smooth', block:'start'});
+      var scroller = document.getElementById('s-profile');
+      if(scroller && scroller.scrollBy) scroller.scrollBy({top:-10, behavior:'smooth'});
+    }catch(e){
+      try{ if(el.scrollIntoView) el.scrollIntoView(); }catch(_){}
+    }
+  },60);
+}
 
 function buildAvGrid(mode){
   // mode: 'base' = 身份頭像（只選內建）, 'display' = 顯示頭像（內建+已解鎖）
@@ -2145,7 +2160,7 @@ function openVcoinHistory(){
   hideTitleGrid();
   wrap.style.display = 'block';
   setProfileDataCollapsed(true);
-  scrollProfileDataCardIntoView();
+  scrollProfilePanelStartIntoView(wrap);
   if(summary) summary.textContent = '目前餘額：讀取中...';
   if(list) list.innerHTML = '<div class="vcoin-empty-msg">🎈 載入 V幣紀錄中...</div>';
   loadVcoinHistory(PLAYER && PLAYER.playerKey).then(function(data){
