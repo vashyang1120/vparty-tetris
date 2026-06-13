@@ -220,6 +220,73 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .identity-box code{display:block;margin-top:4px;font-size:10px;line-height:1.4;color:var(--text2);word-break:break-all;background:var(--pink-bg);border-radius:10px;padding:6px 8px}
 .profile-wallet-box strong{font-family:'Fredoka One',cursive;color:#d59a00;font-size:20px}
 .profile-title-current strong{color:var(--purple)}
+#s-profile{padding-bottom:118px}
+.profile-data-card{
+  width:min(480px,94vw);
+  margin:10px 0 14px;
+  overflow:visible;
+  flex:0 0 auto;
+}
+.profile-data-toggle{
+  width:100%;
+  min-height:58px;
+  border:1.8px solid var(--purple-lt);
+  background:linear-gradient(135deg,#fff,var(--purple-bg));
+  color:var(--purple);
+  padding:13px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  font-family:'Nunito','Noto Sans TC',sans-serif;
+  font-weight:900;
+  cursor:pointer;
+  border-radius:22px;
+  box-shadow:0 8px 22px rgba(155,93,229,.16),var(--shadow-sm);
+  position:relative;
+  z-index:1;
+}
+.profile-data-toggle span{font-size:15px;line-height:1.2;white-space:nowrap}
+.profile-data-toggle small{font-size:10px;color:var(--text2);font-weight:900;line-height:1.2;white-space:nowrap}
+.profile-data-toggle::after{
+  content:"⌃";
+  font-size:16px;
+  color:var(--purple);
+  font-weight:900;
+  margin-left:2px;
+}
+.profile-data-content{
+  margin-top:8px;
+  padding:12px;
+  background:#fff;
+  border:1.5px solid rgba(255,182,215,.45);
+  border-radius:20px;
+  box-shadow:var(--shadow-sm);
+  max-height:min(300px,42vh);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.profile-data-card.collapsed .profile-data-content{display:none}
+.profile-data-card.collapsed .profile-data-toggle{
+  min-height:58px;
+  border-color:var(--purple);
+  background:linear-gradient(135deg,#fff,var(--purple-bg));
+}
+.profile-data-card.collapsed .profile-data-toggle::after{content:"⌄"}
+.profile-data-card.collapsed .profile-data-toggle small::before{content:"已收合，點擊展開"}
+.profile-data-card.collapsed #profile-data-toggle-hint{font-size:0}
+.profile-status-grid{margin:0}
+.profile-save-note{font-size:11px;color:var(--text2);margin-top:8px;margin-bottom:12px}
+.profile-floating-actions{
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);
+  z-index:170;width:min(540px,calc(100vw - 24px));
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;
+  background:rgba(255,255,255,.94);border:1.5px solid rgba(255,182,215,.62);
+  border-radius:22px;padding:10px 12px;box-shadow:0 10px 30px rgba(155,93,229,.18);
+  backdrop-filter:blur(12px);
+}
+.profile-floating-actions .btn{margin:0}
+.profile-floating-actions .btn-p{min-width:126px}
 #title-grid-wrap{
   width:min(480px,94vw);margin-top:12px;background:#fff;border-radius:20px;
   border:1.5px solid var(--purple-lt);padding:14px;box-shadow:var(--shadow-sm);
@@ -248,12 +315,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 @media(max-width:420px){
   #top-player-title{display:block;max-width:150px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tetris-player-chip{right:8px;max-width:calc(100vw - 62px)}
+  #s-profile{padding-bottom:142px}
+  .profile-floating-actions{bottom:10px;border-radius:20px;padding:9px 8px;gap:6px}
+  .profile-floating-actions .btn{font-size:11px;padding:9px 10px}
+  .profile-floating-actions .btn-p{min-width:118px}
+  .profile-data-toggle{min-height:56px;padding:12px 14px}
+  .profile-data-toggle span{font-size:14px}
+  .profile-data-toggle small{font-size:9px}
+  .profile-data-content{max-height:38vh}
+  .lb-floating-actions{bottom:10px}
 }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ── LEADERBOARD ── */
 #s-lb{background:linear-gradient(160deg,#fff5fb,#f8f0ff);gap:12px;
-  padding:16px 16px 80px;overflow-y:auto;justify-content:flex-start}
+  padding:16px 16px 112px;overflow-y:auto;justify-content:flex-start}
 #s-lb h2{font-family:'Fredoka One',cursive;color:var(--pink2);font-size:22px;margin-top:12px}
 
 .lb-card{background:#fff;border-radius:var(--r-lg);
@@ -276,6 +352,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .lb-title{font-size:10px;color:var(--purple);font-weight:900;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-meta{font-size:10px;color:var(--text2);font-weight:600}
 .lb-score{font-family:'Fredoka One',cursive;font-size:18px;color:var(--pink2)}
+.lb-floating-actions{
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);
+  z-index:170;width:min(360px,calc(100vw - 24px));display:flex;justify-content:center;
+  background:rgba(255,255,255,.94);border:1.5px solid rgba(255,182,215,.62);
+  border-radius:22px;padding:10px 12px;box-shadow:0 10px 30px rgba(155,93,229,.18);
+  backdrop-filter:blur(12px);
+}
+.lb-floating-actions .btn{margin:0;width:100%}
 .lb-msg{text-align:center;color:var(--text2);font-size:13px;padding:20px}
 
 /* ── MUSIC PLAYER ── */
@@ -433,7 +517,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.0</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.2</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -483,34 +567,40 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     </div>
   </div>
 
-  <!-- 目前玩家狀態 -->
-  <div class="profile-status-grid">
-    <div class="identity-box">
-      <div>目前遊戲身份：</div>
-      <strong id="profile-identity-label">身份：—</strong>
-      <code id="profile-player-key">—</code>
-    </div>
-    <div class="profile-wallet-box">
-      <span>🪙 目前 V幣</span>
-      <strong id="profile-vcoin-balance">—</strong>
-    </div>
-    <div class="profile-title-panel">
-      <div class="profile-title-current">
-        <span>🎖 目前稱號</span>
-        <strong id="profile-equipped-title">未裝備</strong>
+  <!-- 玩家資料（可收合） -->
+  <div id="profile-data-card" class="profile-data-card">
+    <button id="profile-data-toggle" class="profile-data-toggle" type="button" aria-expanded="true">
+      <span>👤 玩家資料</span>
+      <small id="profile-data-toggle-hint">點擊可收合</small>
+    </button>
+    <div id="profile-data-content" class="profile-data-content">
+      <div class="profile-status-grid">
+        <div class="identity-box">
+          <div>目前遊戲身份：</div>
+          <strong id="profile-identity-label">身份：—</strong>
+          <code id="profile-player-key">—</code>
+        </div>
+        <div class="profile-wallet-box">
+          <span>🪙 目前 V幣</span>
+          <strong id="profile-vcoin-balance">—</strong>
+        </div>
+        <div class="profile-title-panel">
+          <div class="profile-title-current">
+            <span>🎖 目前稱號</span>
+            <strong id="profile-equipped-title">未裝備</strong>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 按鈕列 -->
-  <div style="width:min(480px,94vw);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+  <!-- 底部浮動按鈕列 -->
+  <div class="profile-floating-actions">
     <button class="btn btn-p" id="btn-profile-ok">🎈 確認身份</button>
     <button class="btn btn-outline btn-sm" id="btn-unlock-collection">🏆 頭像收藏</button>
     <button class="btn btn-outline btn-sm" id="btn-title-collection">🎖 稱號收藏</button>
     <button class="btn btn-outline btn-sm" id="btn-profile-back">← 返回</button>
   </div>
-  <div style="font-size:11px;color:var(--text2);margin-top:8px;">設定會自動儲存，下次直接開始！</div>
-
   <!-- 頭像選擇 Grid（動態顯示）-->
   <div id="av-grid-wrap" style="display:none;width:min(480px,94vw);margin-top:12px;background:#fff;border-radius:20px;border:1.5px solid var(--pink-lt);padding:14px;box-shadow:var(--shadow-sm);">
     <div id="av-grid-title" style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px;"></div>
@@ -522,6 +612,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <div id="title-grid-title">🎖 稱號收藏</div>
     <div id="title-grid"></div>
   </div>
+  <div class="profile-save-note">設定會自動儲存，下次直接開始！</div>
 </div>
 
 <!-- GAME -->
@@ -609,7 +700,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   <h2>🏆 排行榜</h2>
 
   <div class="lb-card"><div id="lb-list" class="lb-msg">🎈 載入中...</div></div>
-  <div class="btn-row"><button class="btn btn-outline" id="btn-lb-back">← 返回</button></div>
+  <div class="lb-floating-actions"><button class="btn btn-outline" id="btn-lb-back">← 返回</button></div>
 </div>
 
 <!-- MUSIC MODAL -->
@@ -1442,6 +1533,7 @@ function openProfileFromTopCard(){
   if(hint) hint.style.display = 'none';
   hideAvGrid();
   hideTitleGrid();
+  setProfileDataCollapsed(false);
   syncProfilePreviewUI();
   showScreen('s-profile');
   loadAvatarCatalog().then(function(){
@@ -1478,6 +1570,9 @@ function showScreen(id){
   fsBtn.classList.toggle("off", id==="s-admin");
   updateTopPlayerCardVisibility(id);
   updateTopPlayerCard();
+  if(id === "s-title" && PLAYER && PLAYER.playerKey){
+    updateBestDisp();
+  }
   // Music: only play during game, pause on other screens
   if(!isGame && mPlaying) pauseSong();
 }
@@ -1510,6 +1605,46 @@ document.addEventListener("webkitfullscreenchange",()=>{
 });
 
 // ── PROFILE ──
+function setProfileDataCollapsed(collapsed){
+  var card = document.getElementById('profile-data-card');
+  var toggle = document.getElementById('profile-data-toggle');
+  var hint = document.getElementById('profile-data-toggle-hint');
+  if(!card) return;
+  card.classList.toggle('collapsed', !!collapsed);
+  if(toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  if(hint) hint.textContent = collapsed ? '已收合，點擊展開' : '點擊可收合';
+}
+function isAvGridVisible(){
+  var wrap = document.getElementById('av-grid-wrap');
+  return !!(wrap && wrap.style.display !== 'none' && wrap.style.display !== '');
+}
+function isTitleGridVisible(){
+  var wrap = document.getElementById('title-grid-wrap');
+  return !!(wrap && wrap.style.display !== 'none' && wrap.style.display !== '');
+}
+function syncProfileDataCollapseByPanels(){
+  setProfileDataCollapsed(isAvGridVisible() || isTitleGridVisible());
+}
+function scrollProfilePanelIntoView(el){
+  if(!el) return;
+  setTimeout(function(){
+    try{
+      var container = document.getElementById('s-profile');
+      if(container && container.scrollTo && el.offsetTop !== undefined){
+        container.scrollTo({top: Math.max(0, el.offsetTop - 12), behavior:'smooth'});
+      }else if(el.scrollIntoView){
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    }catch(e){
+      if(el.scrollIntoView) el.scrollIntoView();
+    }
+  }, 40);
+}
+function scrollProfileDataCardIntoView(){
+  var card = document.getElementById('profile-data-card');
+  scrollProfilePanelIntoView(card);
+}
+
 function buildAvGrid(mode){
   // mode: 'base' = 身份頭像（只選內建）, 'display' = 顯示頭像（內建+已解鎖）
   var wrap = document.getElementById("av-grid-wrap");
@@ -1524,6 +1659,8 @@ function buildAvGrid(mode){
     title.textContent = "🎨 選擇顯示頭像";
   }
   wrap.style.display = "block";
+  setProfileDataCollapsed(true);
+  scrollProfileDataCardIntoView();
   grid.innerHTML = "";
 
   // 內建頭像
@@ -1724,6 +1861,7 @@ function buildAvGrid(mode){
 function hideAvGrid(){
   var wrap = document.getElementById("av-grid-wrap");
   if(wrap) wrap.style.display = "none";
+  syncProfileDataCollapseByPanels();
 }
 function goProfile(){
   loadPlayer();
@@ -1735,6 +1873,8 @@ function goProfile(){
   profileOriginalId = PLAYER.id;
   profileOriginalBaseAvatarKey = PLAYER.baseAvatarKey;
   hideAvGrid();
+  hideTitleGrid();
+  setProfileDataCollapsed(false);
   // 讀取最新解鎖資料並驗證 displayAvatarKey
   loadUnlockedAvatars().then(function(res){
     unlockedAvatars = res || {};
@@ -1752,6 +1892,10 @@ function goProfile(){
 }
 document.getElementById("btn-start").addEventListener("click", goProfile);
 document.getElementById("btn-profile-back").addEventListener("click",()=>{hideAvGrid();hideTitleGrid();showScreen("s-title");});
+document.getElementById("profile-data-toggle").addEventListener("click",function(){
+  var card=document.getElementById("profile-data-card");
+  setProfileDataCollapsed(!(card && card.classList.contains("collapsed")));
+});
 
 // ── 身份頭像按鈕 ──
 document.getElementById("btn-change-base-avatar").addEventListener("click", function(){
@@ -2666,6 +2810,7 @@ function buildTitleGrid(){
 function hideTitleGrid(){
   var wrap = document.getElementById('title-grid-wrap');
   if(wrap) wrap.style.display = 'none';
+  syncProfileDataCollapseByPanels();
 }
 
 function toggleTitleCollection(){
@@ -2675,6 +2820,8 @@ function toggleTitleCollection(){
   if(willShow){
     hideAvGrid();
     wrap.style.display = 'block';
+    setProfileDataCollapsed(true);
+    scrollProfileDataCardIntoView();
     buildTitleGrid();
   }else{
     hideTitleGrid();
@@ -2871,6 +3018,7 @@ function gameOver(){
     console.warn('[TetrisTitle] gameOver title check failed:', e && e.message ? e.message : e);
   });
   saveLB();
+  updateBestDisp();
   claimDailyVCoinsForTetris().then(function(){ refreshPlayerMetaUI(); });
   setTimeout(()=>{
     $("res-score").textContent=score.toLocaleString();
@@ -3267,9 +3415,78 @@ $("btn-res-profile").addEventListener("click", openProfileFromTopCard);
 $("btn-replay").addEventListener("click",showDiffSelect);
 
 // ── BEST SCORE ──
+function getLocalBestScore(){
+  return parseInt(localStorage.getItem("vtetris_best") || "0", 10) || 0;
+}
+
+function renderBestScore(value){
+  var n = parseInt(value || "0", 10) || 0;
+  $("best-disp").textContent = n ? n.toLocaleString() : "—";
+}
+
+function getLocalBestScore(){
+  return parseInt(localStorage.getItem("vtetris_best") || "0", 10) || 0;
+}
+
+function renderBestScore(value){
+  var n = parseInt(value || "0", 10) || 0;
+  $("best-disp").textContent = n ? n.toLocaleString() : "—";
+}
+
 function updateBestDisp(){
-  const b=parseInt(localStorage.getItem("vtetris_best")||"0");
-  $("best-disp").textContent=b?b.toLocaleString():"—";
+  var localBest = getLocalBestScore();
+  $("best-disp").textContent = "—";
+  if(!PLAYER || !PLAYER.playerKey){
+    renderBestScore(localBest);
+    return Promise.resolve(localBest);
+  }
+
+  return ensureFirebaseReady().then(function(ok){
+    if(!ok || !firebaseDb){
+      renderBestScore(localBest);
+      return localBest;
+    }
+
+    var cloudBest = 0;
+    var currentIdentityKey = getLeaderboardIdentityKey({
+      id: PLAYER.id,
+      name: PLAYER.name,
+      playerKey: PLAYER.playerKey,
+      baseAvatarKey: PLAYER.baseAvatarKey,
+      avKey: PLAYER.baseAvatarKey,
+      avatarKey: PLAYER.avatarKey,
+      displayAvatarKey: PLAYER.displayAvatarKey
+    });
+
+    var modernPromise = firebaseDb.ref(DB_PATHS.leaderboards + '/' + PLAYER.playerKey).once('value').then(function(snap){
+      var data = snap.val();
+      var score = data && data.score ? parseInt(data.score, 10) || 0 : 0;
+      if(score > cloudBest) cloudBest = score;
+    });
+
+    var legacyPromise = firebaseDb.ref(DB_PATHS.legacyLeaderboard).once('value').then(function(snap){
+      snap.forEach(function(child){
+        var e = child.val() || {};
+        var identityKey = getLeaderboardIdentityKey(e);
+        if(identityKey === currentIdentityKey){
+          var score = parseInt(e.score || 0, 10) || 0;
+          if(score > cloudBest) cloudBest = score;
+        }
+      });
+    });
+
+    return Promise.all([modernPromise, legacyPromise]).then(function(){
+      renderBestScore(cloudBest);
+      if(cloudBest > 0) localStorage.setItem("vtetris_best_" + PLAYER.playerKey, String(cloudBest));
+      return cloudBest;
+    });
+  }).catch(function(e){
+    console.warn('[BestScore] cloud best load failed:', e && e.message ? e.message : e);
+    var scopedLocal = parseInt(localStorage.getItem("vtetris_best_" + PLAYER.playerKey) || "0", 10) || 0;
+    var fallback = scopedLocal || localBest;
+    renderBestScore(fallback);
+    return fallback;
+  });
 }
 
 // ── ADMIN ──
