@@ -233,7 +233,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .profile-data-toggle span{font-size:14px}
 .profile-data-toggle small{font-size:10px;color:var(--text2);font-weight:900}
 .profile-data-content{padding:12px 12px 4px}
+.profile-data-card.collapsed{margin-bottom:10px}
 .profile-data-card.collapsed .profile-data-content{display:none}
+.profile-data-card.collapsed .profile-data-toggle{
+  padding:10px 14px;background:linear-gradient(135deg,#fff,var(--purple-bg));
+  border-bottom:0;
+}
 .profile-data-card.collapsed .profile-data-toggle small::before{content:"已收合，點擊展開"}
 .profile-data-card.collapsed #profile-data-toggle-hint{font-size:0}
 .profile-status-grid{margin:0}
@@ -474,7 +479,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.2-profile-lb-floating-ui-test-1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.2-profile-lb-floating-ui-test-2</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1605,7 +1610,6 @@ function buildAvGrid(mode){
   }
   wrap.style.display = "block";
   setProfileDataCollapsed(true);
-  scrollProfilePanelIntoView(wrap);
   grid.innerHTML = "";
 
   // 內建頭像
@@ -2766,7 +2770,6 @@ function toggleTitleCollection(){
     hideAvGrid();
     wrap.style.display = 'block';
     setProfileDataCollapsed(true);
-    scrollProfilePanelIntoView(wrap);
     buildTitleGrid();
   }else{
     hideTitleGrid();
