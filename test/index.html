@@ -562,7 +562,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-history-foundation-test-4</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.4-vcoin-wallet-history-foundation-test-5</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -1007,6 +1007,7 @@ var TETRIS_TITLES = {
   }
 };
 var titleCollectionFilter = "all";
+var LAST_KNOWN_VCOIN_BALANCE = null;
 // ── avatarCatalog：從 Firebase 讀取學生/特殊頭像 ──
 function loadAvatarCatalog() {
   if (!FIREBASE_ENABLED) return Promise.resolve({});
@@ -2117,12 +2118,13 @@ function loadVcoinHistory(playerKey){
   var fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
 
   function makeUnavailableResult(){
+    var finalBalance = fallbackBalance !== null ? fallbackBalance : getCurrentDisplayedVcoinBalanceFallback();
     return {
-      balance: fallbackBalance !== null ? fallbackBalance : 0,
+      balance: finalBalance !== null ? finalBalance : 0,
       logs: [],
-      balanceError: fallbackBalance === null,
+      balanceError: finalBalance === null,
       logsError: true,
-      balanceFromFallback: fallbackBalance !== null
+      balanceFromFallback: finalBalance !== null
     };
   }
 
@@ -2141,7 +2143,9 @@ function loadVcoinHistory(playerKey){
       .once('value')
       .then(function(snap){
         var n = Number(snap.val() || 0);
-        return isFinite(n) ? n : 0;
+        if(!isFinite(n)) n = 0;
+        setLastKnownVcoinBalance(n);
+        return n;
       })
       .catch(function(e){
         console.warn('[VCoins] balance read failed:', e && e.message ? e.message : e);
@@ -2174,18 +2178,23 @@ function loadVcoinHistory(playerKey){
       var finalBalance = balance;
       var balanceFromFallback = false;
 
-      if(finalBalance === null && fallbackBalance !== null){
-        finalBalance = fallbackBalance;
-        balanceFromFallback = true;
-        console.warn('[VCoins] using displayed balance fallback:', fallbackBalance);
+      if(finalBalance === null){
+        fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
+        if(fallbackBalance !== null){
+          finalBalance = fallbackBalance;
+          balanceFromFallback = true;
+          console.warn('[VCoins] using last known/displayed balance fallback:', fallbackBalance);
+        }
       }
 
-      if(finalBalance === null) finalBalance = 0;
+      if(finalBalance !== null){
+        setLastKnownVcoinBalance(finalBalance);
+      }
 
       return {
-        balance: finalBalance,
+        balance: finalBalance === null ? 0 : finalBalance,
         logs: Array.isArray(logs) ? logs : [],
-        balanceError: balance === null && fallbackBalance === null,
+        balanceError: finalBalance === null,
         logsError: logs === null,
         balanceFromFallback: balanceFromFallback
       };
@@ -2207,6 +2216,7 @@ function renderVcoinHistory(data){
   if(data.balanceError === true){
     summary.textContent = '目前餘額：讀取失敗';
   }else{
+    setLastKnownVcoinBalance(balance);
     summary.textContent = '目前餘額：' + balance + ' V幣';
   }
 
@@ -2269,11 +2279,13 @@ function openVcoinHistory(){
     refreshPlayerVCoins();
   }).catch(function(e){
     console.warn('[VCoins] history unexpected read failed:', e && e.message ? e.message : e);
+    var fallbackBalance = getCurrentDisplayedVcoinBalanceFallback();
     renderVcoinHistory({
-      balance: 0,
+      balance: fallbackBalance !== null ? fallbackBalance : 0,
       logs: [],
-      balanceError: true,
-      logsError: true
+      balanceError: fallbackBalance === null,
+      logsError: true,
+      balanceFromFallback: fallbackBalance !== null
     });
   });
 }
@@ -3872,16 +3884,37 @@ function parseVcoinNumber(text){
   var n = Number(m[0]);
   return isFinite(n) ? n : null;
 }
+function setLastKnownVcoinBalance(value){
+  var n = Number(value);
+  if(isFinite(n) && n >= 0){
+    LAST_KNOWN_VCOIN_BALANCE = n;
+    return n;
+  }
+  return LAST_KNOWN_VCOIN_BALANCE;
+}
+
+function getLastKnownVcoinBalance(){
+  var n = Number(LAST_KNOWN_VCOIN_BALANCE);
+  return isFinite(n) && n >= 0 ? n : null;
+}
+
 
 function getCurrentDisplayedVcoinBalanceFallback(){
+  var cached = getLastKnownVcoinBalance();
+  if(cached !== null) return cached;
+
   var candidates = [];
   var profileEl = document.getElementById("profile-vcoin-balance");
   if(profileEl) candidates.push(parseVcoinNumber(profileEl.textContent));
   var topEl = document.getElementById("top-vcoin-balance");
   if(topEl) candidates.push(parseVcoinNumber(topEl.textContent));
+
   for(var i=0;i<candidates.length;i++){
     var n = Number(candidates[i]);
-    if(isFinite(n) && n >= 0) return n;
+    if(isFinite(n) && n >= 0){
+      setLastKnownVcoinBalance(n);
+      return n;
+    }
   }
   return null;
 }
