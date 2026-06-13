@@ -402,13 +402,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 /* fullscreen btn */
 #fs-btn{
   position:fixed;top:10px;left:10px;right:auto;z-index:180;
-  background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);
-  border-radius:10px;color:#fff;font-size:18px;
-  width:38px;height:38px;cursor:pointer;
+  background:linear-gradient(135deg,var(--purple),var(--pink2));
+  border:2px solid rgba(255,255,255,.95);
+  border-radius:12px;color:#fff;font-size:18px;font-weight:900;
+  width:40px;height:40px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  transition:all .18s;backdrop-filter:blur(6px);
+  box-shadow:0 8px 22px rgba(155,93,229,.34),0 2px 8px rgba(232,111,154,.28);
+  transition:transform .18s,box-shadow .18s,filter .18s;backdrop-filter:blur(6px);
 }
-#fs-btn:hover{background:rgba(255,133,161,.35);border-color:var(--pink);}
+#fs-btn:hover{filter:brightness(1.08);box-shadow:0 10px 26px rgba(155,93,229,.42),0 3px 10px rgba(232,111,154,.32);}
+#fs-btn:active{transform:scale(.95);}
 #fs-btn.off{display:none !important;}
 </style>
 </head>
@@ -430,7 +433,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.0-tetris-title-system-test-3</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.0-tetris-title-system-test-4</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
