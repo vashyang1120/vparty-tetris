@@ -512,47 +512,107 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 /* ── MOBILE CONTROLS ── */
 #mob-ctrl{
   position:fixed;bottom:0;left:0;right:0;z-index:50;display:none;
-  background:rgba(26,10,46,.98);backdrop-filter:blur(10px);
-  border-top:1px solid rgba(255,255,255,.15);
-  padding:8px 20px 16px;
-  align-items:center;justify-content:space-between;gap:12px;
+  background:transparent;
+  border-top:0;
+  padding:0 22px calc(14px + env(safe-area-inset-bottom));
+  align-items:flex-end;justify-content:space-between;gap:18px;
   height:170px;
+  pointer-events:none;
 }
-/* D-pad left side */
+/* Left side: move */
 .dpad{
-  display:grid;
-  grid-template-columns:repeat(3,44px);
-  grid-template-rows:repeat(3,44px);
-  gap:4px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:flex-start;
+  gap:18px;
+  pointer-events:auto;
 }
-/* Right side action buttons */
+/* Right side: rotate / soft drop / hard drop */
 .action-btns{
-  display:flex;flex-direction:column;gap:8px;align-items:center;
+  position:relative;
+  width:clamp(172px,26vw,230px);
+  height:clamp(124px,18vw,168px);
+  pointer-events:auto;
 }
-.action-row{display:flex;gap:8px;}
+.action-row{display:contents;}
 
 .mob-btn{
-  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
-  border-radius:12px;color:#fff;font-size:20px;
+  background:rgba(255,255,255,.15);
+  border:2px solid rgba(255,255,255,.58);
+  border-radius:50%;
+  color:rgba(255,255,255,.92);
+  font-size:24px;
   cursor:pointer;text-align:center;
-  font-family:'Fredoka One',cursive;user-select:none;
-  transition:background .1s,transform .1s;
+  font-family:'Fredoka One','Nunito','Noto Sans TC',sans-serif;user-select:none;
+  transition:background .1s,transform .1s,border-color .1s,box-shadow .1s;
   display:flex;align-items:center;justify-content:center;
   -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  box-shadow:0 3px 10px rgba(0,0,0,.16);
 }
-.mob-btn:active{background:rgba(255,133,161,.45);border-color:var(--pink);transform:scale(.9);}
-.dpad .mob-btn{width:44px;height:44px;font-size:18px;}
-.dpad .mob-btn.center{background:transparent;border-color:transparent;pointer-events:none;}
+.mob-btn:active{
+  background:rgba(255,255,255,.33);
+  border-color:rgba(255,255,255,.96);
+  transform:scale(.94);
+  box-shadow:0 4px 14px rgba(255,255,255,.15);
+}
+.dpad .mob-btn{
+  width:clamp(64px,9vw,84px);
+  height:clamp(64px,9vw,84px);
+  font-size:28px;
+}
+.dpad .mob-btn.center{display:none;}
 .action-btn-lg{
-  width:64px;height:64px;font-size:22px;border-radius:50%;
-  background:rgba(255,133,161,.2);border:2px solid rgba(255,133,161,.4);
+  position:absolute;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:clamp(72px,10vw,90px);
+  height:clamp(72px,10vw,90px);
+  font-size:24px;
+  border-radius:50%;
+  background:rgba(255,255,255,.17);
+  border:2px solid rgba(255,255,255,.64);
 }
-.action-btn-lg:active{background:rgba(255,133,161,.6);}
+.action-btn-lg:active{
+  background:rgba(255,255,255,.35);
+  transform:translateX(-50%) scale(.94);
+}
 .action-btn-sm{
-  width:52px;height:52px;font-size:18px;border-radius:14px;
+  position:absolute;
+  bottom:0;
+  width:clamp(64px,9vw,82px);
+  height:clamp(64px,9vw,82px);
+  font-size:22px;
+  border-radius:50%;
 }
-.action-label{font-size:9px;color:rgba(255,255,255,.4);font-weight:800;margin-top:2px;letter-spacing:.05em;}
-
+.action-row .action-btn-sm:first-child{left:0;}
+.action-row .action-btn-sm:last-child{right:0;}
+.action-label{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:-16px;
+  font-size:10px;color:rgba(255,255,255,.62);font-weight:900;margin-top:0;letter-spacing:.06em;
+  text-shadow:0 1px 4px rgba(0,0,0,.45);
+  pointer-events:none;
+}
+@media(max-height:700px) and (max-width:900px){
+  #mob-ctrl{height:150px;padding-left:18px;padding-right:18px;gap:14px}
+  .dpad{gap:14px;}
+  .dpad .mob-btn{width:clamp(58px,8.5vw,76px);height:clamp(58px,8.5vw,76px)}
+  .action-btns{width:clamp(158px,24vw,208px);height:clamp(112px,17vw,150px)}
+  .action-btn-lg{width:clamp(64px,9vw,82px);height:clamp(64px,9vw,82px)}
+  .action-btn-sm{width:clamp(58px,8.5vw,76px);height:clamp(58px,8.5vw,76px)}
+}
+@media(max-height:620px) and (max-width:900px){
+  #mob-ctrl{height:138px;padding-left:16px;padding-right:16px;gap:12px}
+  .dpad{gap:12px;}
+  .dpad .mob-btn{width:56px;height:56px}
+  .action-btns{width:150px;height:108px}
+  .action-btn-lg{width:62px;height:62px}
+  .action-btn-sm{width:56px;height:56px}
+}
 /* toast */
 #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);
   background:rgba(26,10,46,.9);color:#fff;border-radius:var(--r-xl);
@@ -618,7 +678,7 @@ body:not(.game-active) #mob-ctrl{display:none!important}
 <div id="s-title" class="screen">
   <div class="title-deco">🎈🎪🎈</div>
   <div class="logo" id="logo-title">氣球小V<br>方塊派對<small>BALLOON V TETRIS</small></div>
-  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.6-tetris-title-collection-scope-test-1</div>
+  <div style="font-size:11px;color:rgba(155,93,229,.4);letter-spacing:.15em;margin-top:4px;">v1.3.7-mobile-controls-ui-test-1</div>
   <div class="title-card">
     <div class="title-sub">🎈 用氣球堆疊你的世界 🎈</div>
     <div class="best-box">最高紀錄：<span id="best-disp">—</span></div>
@@ -935,32 +995,20 @@ body:not(.game-active) #mob-ctrl{display:none!important}
 
 <!-- MOBILE CONTROLS -->
 <div id="mob-ctrl">
-  <!-- LEFT: 下左右 3鍵 -->
+  <!-- LEFT: move buttons -->
   <div class="dpad">
-    <!-- row1: 空行保持對齊 -->
-    <div class="mob-btn center"></div>
-    <div class="mob-btn center"></div>
-    <div class="mob-btn center"></div>
-    <!-- row2: 左右 -->
-    <button class="mob-btn" id="mob-left">◀</button>
-    <div class="mob-btn center"></div>
-    <button class="mob-btn" id="mob-right">▶</button>
-    <!-- row3: 下 -->
-    <div class="mob-btn center"></div>
-    <button class="mob-btn" id="mob-down">▼</button>
-    <div class="mob-btn center"></div>
+    <button class="mob-btn" id="mob-left">←</button>
+    <button class="mob-btn" id="mob-right">→</button>
   </div>
 
-  <!-- MIDDLE: 落下 -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
-    <button class="mob-btn action-btn-lg" id="mob-drop">⬇</button>
-    <div class="action-label">落下</div>
-  </div>
-
-  <!-- RIGHT: 旋轉 -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
-    <button class="mob-btn action-btn-sm" id="mob-rotl">↺</button>
-    <div class="action-label">旋轉</div>
+  <!-- RIGHT: Tetris actions -->
+  <div class="action-btns" aria-label="手機操作">
+    <button class="mob-btn action-btn-lg" id="mob-rotl">轉</button>
+    <div class="action-row">
+      <button class="mob-btn action-btn-sm" id="mob-down">下</button>
+      <button class="mob-btn action-btn-sm" id="mob-drop">落</button>
+    </div>
+    <div class="action-label">轉 / 下 / 落</div>
   </div>
 </div>
 
